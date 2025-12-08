@@ -1094,31 +1094,41 @@
                     console.warn('Could not get rect for field:', name);
                 }
 
-                // Build field list UI
+                // Build field list UI with AI-friendly data attributes
                 const displayName = FIELD_DISPLAY_NAMES[name] || name;
                 const isImageField = IMAGE_FIELDS.includes(name);
 
                 const div = document.createElement('div');
                 div.className = "flex items-center justify-between p-1.5 hover:bg-blue-50 rounded cursor-pointer group transition-colors border-l-2 border-transparent hover:border-blue-400 hover:pl-2 transition-all";
+                div.setAttribute('role', 'listitem');
+                div.setAttribute('data-field-name', name);
+                div.setAttribute('data-field-type', isImageField ? 'image' : (isCheckbox ? 'checkbox' : 'text'));
+                div.setAttribute('data-display-name', displayName);
 
                 if (isImageField) {
                     // Image fields trigger file upload
                     div.onclick = () => triggerImageUpload(name);
+                    div.setAttribute('aria-label', `Upload image for ${displayName}`);
+                    div.setAttribute('data-action', 'upload-image');
                     const dotColor = fieldImages[name] ? 'bg-green-500' : 'bg-purple-400';
-                    div.innerHTML = `<div class="flex items-center gap-2 overflow-hidden"><span class="w-1.5 h-1.5 rounded-full ${dotColor} flex-shrink-0"></span><code class="text-[10px] font-bold text-gray-600 truncate select-all font-mono" title="${name}">${displayName}</code></div>`;
+                    div.innerHTML = `<div class="flex items-center gap-2 overflow-hidden"><span class="w-1.5 h-1.5 rounded-full ${dotColor} flex-shrink-0" aria-hidden="true"></span><code class="text-[10px] font-bold text-gray-600 truncate select-all font-mono" title="${name}">${displayName}</code></div>`;
                 } else {
                     // Regular fields add to JSON
                     div.onclick = () => addKeyToJSON(name);
+                    div.setAttribute('aria-label', `Add ${displayName} to JSON data`);
+                    div.setAttribute('data-action', 'add-to-json');
                     const dotColor = isCheckbox ? 'bg-orange-400' : 'bg-blue-400';
-                    div.innerHTML = `<div class="flex items-center gap-2 overflow-hidden"><span class="w-1.5 h-1.5 rounded-full ${dotColor} flex-shrink-0"></span><code class="text-[10px] font-bold text-gray-600 truncate select-all font-mono" title="${name}">${displayName}</code></div>`;
+                    div.innerHTML = `<div class="flex items-center gap-2 overflow-hidden"><span class="w-1.5 h-1.5 rounded-full ${dotColor} flex-shrink-0" aria-hidden="true"></span><code class="text-[10px] font-bold text-gray-600 truncate select-all font-mono" title="${name}">${displayName}</code></div>`;
                 }
                 listContainer.appendChild(div);
             });
 
             document.getElementById('download-btn').disabled = false;
             document.getElementById('download-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+            document.getElementById('download-btn').setAttribute('aria-disabled', 'false');
             document.getElementById('verify-btn').disabled = false;
             document.getElementById('verify-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+            document.getElementById('verify-btn').setAttribute('aria-disabled', 'false');
             updatePreview();
         }
 
