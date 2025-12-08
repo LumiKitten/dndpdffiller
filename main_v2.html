@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D 5E Character Sheet PDF Editor - Fill & Download</title>
+
+    <!-- SEO and AI Agent Metadata -->
+    <meta name="description"
+        content="A web-based tool to fill D&D 5E character sheet PDFs using JSON data. Features live preview, direct editing on PDF overlays, image upload for character portraits, and formatted PDF export.">
+    <meta name="keywords"
+        content="D&D, Dungeons and Dragons, 5E, character sheet, PDF editor, fillable PDF, character creator">
+    <meta name="author" content="Comet PDF Editor">
+    <meta name="application-name" content="D&D PDF Editor">
+    <meta name="robots" content="index, follow">
+
+    <!-- Open Graph for rich link previews -->
+    <meta property="og:title" content="D&D 5E Character Sheet PDF Editor">
+    <meta property="og:description"
+        content="Fill D&D 5E character sheets with JSON data. Live preview, direct PDF editing, and formatted export.">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="en_US">
+
+    <!-- JSON-LD Structured Data for AI Agents -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "D&D 5E Character Sheet PDF Editor",
+        "description": "A client-side web application for filling D&D 5E character sheet PDFs using JSON data with live preview.",
+        "applicationCategory": "UtilitiesApplication",
+        "operatingSystem": "Any (Browser-based)",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+        },
+        "featureList": [
+            "Upload any fillable PDF form",
+            "Fill form fields using JSON data",
+            "Live preview with zoom controls",
+            "Direct text editing on PDF overlays",
+            "Character portrait image upload",
+            "Download filled PDF",
+            "Dark mode support",
+            "JSON export/import"
+        ],
+        "browserRequirements": "Requires JavaScript. Works best in modern browsers (Chrome, Firefox, Edge, Safari)."
+    }
+    </script>
+
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = '';</script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .pdf-container::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+
+        .pdf-container::-webkit-scrollbar-thumb {
+            background: #9ca3af;
+            border-radius: 6px;
+            border: 3px solid #e5e7eb;
+        }
+
+        .pdf-container::-webkit-scrollbar-corner {
+            background: #e5e7eb;
+        }
+
+        .CodeMirror {
+            height: 100% !important;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .cm-s-dracula .CodeMirror-gutters {
+            background: #1e1e2e;
+            border-right: 1px solid #313244;
+        }
+
+        /* Page wrapper for overlay positioning */
+        .page-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Field overlay inputs */
+        .field-overlay {
+            position: absolute;
+            background: transparent;
+            border: none;
+            padding: 1px 2px;
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #000;
+            overflow: hidden;
+            resize: none;
+            outline: none;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+        }
+
+        .field-overlay.centered {
+            justify-content: center;
+            text-align: center;
+        }
+
+        .field-overlay.multiline {
+            display: block;
+            padding-top: 2px;
+            white-space: pre-wrap;
+        }
+
+        .field-overlay:focus {
+            background: rgba(59, 130, 246, 0.1);
+            outline: 1px solid rgba(59, 130, 246, 0.5);
+        }
+
+        .field-overlay.checkbox-overlay {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .field-overlay.checkbox-overlay::after {
+            content: '';
+            display: block;
+        }
+
+        .field-overlay.checkbox-overlay.checked::after {
+            content: '✓';
+            font-weight: bold;
+            color: #000;
+        }
+
+        /* Editable text field overlays */
+        .field-overlay.editable {
+            cursor: text;
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        .field-overlay.editable:empty::before {
+            content: attr(data-placeholder);
+            color: rgba(0, 0, 0, 0.3);
+            font-style: italic;
+        }
+
+        /* Image upload boxes */
+        .image-upload-box {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(245, 245, 245, 0.95);
+            border: 2px dashed rgba(156, 163, 175, 0.5);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .image-upload-box:hover {
+            border-color: rgba(99, 102, 241, 0.7);
+            background: rgba(238, 242, 255, 0.95);
+        }
+
+        .image-upload-box .upload-icon {
+            font-size: 24px;
+            color: #9ca3af;
+            margin-bottom: 4px;
+        }
+
+        .image-upload-box .upload-text {
+            font-size: 10px;
+            color: #6b7280;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .image-upload-box .size-hint {
+            font-size: 8px;
+            color: #9ca3af;
+            margin-top: 2px;
+            text-align: center;
+        }
+
+        .image-upload-box.has-image {
+            border: none;
+            background: transparent;
+        }
+
+        .image-upload-box.has-image .upload-content {
+            display: none;
+        }
+
+        .image-upload-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Debug mode styles */
+        .debug-box {
+            position: absolute;
+            border: 2px solid rgba(255, 0, 0, 0.7);
+            background: rgba(255, 0, 0, 0.1);
+            pointer-events: none;
+            box-sizing: border-box;
+            font-size: 8px;
+            color: red;
+            overflow: visible;
+        }
+
+        .debug-box.checkbox {
+            border-color: rgba(255, 165, 0, 0.8);
+            background: rgba(255, 165, 0, 0.15);
+            color: orange;
+        }
+
+        .debug-label {
+            position: absolute;
+            top: -12px;
+            left: 0;
+            font-size: 7px;
+            white-space: nowrap;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1px 2px;
+        }
+
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #ef4444;
+        }
+
+        .toggle-checkbox:checked+.toggle-label {
+            background-color: #ef4444;
+        }
+
+        /* Formatting Toolbar */
+        .formatting-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 8px;
+            width: 100%;
+        }
+
+        .toolbar-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding-right: 8px;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .toolbar-group:last-child {
+            border-right: none;
+        }
+
+        .toolbar-btn {
+            padding: 4px 8px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+        }
+
+        .toolbar-btn:hover {
+            background-color: #f3f4f6;
+        }
+
+        .toolbar-btn.active {
+            background-color: #e0e7ff;
+            color: #4338ca;
+            border-color: #c7d2fe;
+        }
+
+        .toolbar-select {
+            padding: 2px 4px;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+            font-size: 12px;
+            color: #374151;
+        }
+
+        /* Screen reader only utility class */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+    </style>
+</head>
+
+<body
+    class="bg-gray-100 text-gray-800 h-screen flex flex-col overflow-hidden dark:bg-gray-900 dark:text-gray-100 transition-colors duration-200"
+    data-app="dnd-pdf-editor" data-version="2.0">
+
+    <!-- Skip to main content for accessibility -->
+    <a href="#pdf-container"
+        class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded">Skip
+        to PDF Preview</a>
+
+    <header role="banner" aria-label="Application header with controls"
+        class="bg-white border-b border-gray-200 py-2 px-4 shadow-sm flex-none z-20 flex flex-col gap-0 dark:bg-gray-800 dark:border-gray-700">
+        <!-- Row 1: Logo and Main Controls -->
+        <div class="flex flex-wrap gap-4 justify-between items-center w-full">
+            <div class="flex items-center gap-3">
+                <div class="bg-gradient-to-br from-purple-600 to-blue-500 text-white p-1.5 rounded-md">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-gray-900 leading-tight dark:text-white">DnD PDF Editor <span
+                            class="text-purple-600">v2</span></h1>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Experimental Overlay Mode</p>
+                </div>
+            </div>
+            <!-- Removed duplicate zoom controls -->
+            <!-- Updated Controls -->
+            <nav role="toolbar" aria-label="PDF controls and view options"
+                class="flex items-center gap-4 bg-gray-50 p-1.5 rounded-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600">
+                <div class="flex items-center gap-2 border-r border-gray-300 pr-3 mr-1 dark:border-gray-500"
+                    role="group" aria-label="Zoom controls">
+                    <label for="zoom-slider" class="text-xs text-gray-500 font-medium dark:text-gray-300">Zoom:</label>
+                    <input type="range" id="zoom-slider" min="10" max="300" value="100"
+                        class="w-24 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-600"
+                        oninput="updateZoomLabel(this.value)" onchange="applyZoom(this.value)" aria-valuemin="10"
+                        aria-valuemax="300" aria-valuenow="100" aria-label="PDF zoom level">
+                    <output id="zoom-level" for="zoom-slider"
+                        class="text-xs font-mono w-12 text-center text-gray-600 dark:text-gray-200">100%</output>
+                    <button onclick="toggleAutoFit()" id="btn-autofit"
+                        class="ml-1 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded border border-blue-200 font-medium dark:bg-blue-900 dark:text-blue-200 dark:border-blue-800"
+                        aria-label="Fit PDF to window width" data-action="auto-fit-toggle">Fit</button>
+                </div>
+
+                <!-- Dark Mode Toggle -->
+                <div class="flex items-center gap-2 border-r border-gray-300 pr-3 mr-1 dark:border-gray-500"
+                    role="group" aria-label="Theme toggle">
+                    <button onclick="toggleDarkMode()"
+                        class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
+                        aria-label="Toggle dark mode" aria-pressed="false" id="dark-mode-btn"
+                        data-action="toggle-dark-mode">
+                        <span id="dark-mode-icon" aria-hidden="true">🌙</span>
+                    </button>
+                </div>
+
+                <!-- View Toggles -->
+                <div class="flex items-center gap-2 border-r border-gray-300 pr-3 mr-1 dark:border-gray-500"
+                    role="group" aria-label="Panel visibility toggles">
+                    <button onclick="togglePanel('sidebar')" id="btn-toggle-sidebar"
+                        class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-blue-600 font-medium text-xs"
+                        aria-label="Toggle field list sidebar" aria-expanded="true" aria-controls="sidebar-panel"
+                        data-action="toggle-sidebar">Runes</button>
+                    <button onclick="togglePanel('toolbar')" id="btn-toggle-toolbar"
+                        class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-blue-600 font-medium text-xs"
+                        aria-label="Toggle formatting toolbar" aria-expanded="true" aria-controls="formatting-toolbar"
+                        data-action="toggle-toolbar">Format</button>
+                    <button onclick="togglePanel('json')" id="btn-toggle-json"
+                        class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-blue-600 font-medium text-xs"
+                        aria-label="Toggle JSON editor panel" aria-expanded="true" aria-controls="json-panel"
+                        data-action="toggle-json">JSON</button>
+                </div>
+
+                <button id="debug-toggle-btn" onclick="toggleDebug()"
+                    class="text-xs font-semibold uppercase tracking-wider px-2 py-1 rounded transition-colors duration-200 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
+                    aria-label="Toggle debug mode to show field boundaries" aria-pressed="false"
+                    data-action="toggle-debug">Debug</button>
+                <button id="download-btn" onclick="downloadPDF()"
+                    class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium opacity-50 cursor-not-allowed shadow-sm"
+                    disabled aria-label="Download filled PDF" aria-disabled="true"
+                    data-action="download-pdf">Download</button>
+                <button id="verify-btn" onclick="verifyPDF()"
+                    class="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium opacity-50 cursor-not-allowed shadow-sm ml-2"
+                    disabled aria-label="Preview filled PDF in new tab" aria-disabled="true"
+                    data-action="verify-pdf">Verify Export</button>
+            </nav>
+        </div>
+
+        <!-- Row 2: Formatting Toolbar -->
+        <div class="formatting-toolbar transition-all duration-300 ease-in-out dark:border-gray-700"
+            id="formatting-toolbar" role="toolbar" aria-label="Text formatting options for selected field">
+            <div class="toolbar-group dark:border-gray-700" role="group" aria-label="Font settings">
+                <label for="font-family-select" class="sr-only">Font Family</label>
+                <select id="font-family-select"
+                    class="toolbar-select dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600" disabled
+                    aria-label="Font family (PDF standard fonts only)" data-field="font-family">
+                    <option value="Helvetica">Helvetica</option>
+                    <option value="Times-Roman">Times New Roman</option>
+                    <option value="Courier">Courier</option>
+                </select>
+                <label for="font-size-select" class="sr-only">Font Size</label>
+                <select id="font-size-select"
+                    class="toolbar-select dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
+                    onchange="applyStyle('fontSize', this.value)" aria-label="Font size in points"
+                    data-field="font-size">
+                    <option value="">Auto</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="12">12</option>
+                    <option value="14">14</option>
+                    <option value="16">16</option>
+                    <option value="18">18</option>
+                    <option value="24">24</option>
+                    <option value="36">36</option>
+                </select>
+            </div>
+
+            <div class="toolbar-group dark:border-gray-700" role="group" aria-label="Text style">
+                <button class="toolbar-btn dark:text-gray-300 dark:hover:bg-gray-700" id="btn-bold"
+                    onclick="toggleStyle('bold')" aria-label="Toggle bold text" aria-pressed="false"
+                    data-action="toggle-bold">
+                    <strong aria-hidden="true">B</strong>
+                </button>
+                <button class="toolbar-btn dark:text-gray-300 dark:hover:bg-gray-700" id="btn-italic"
+                    onclick="toggleStyle('italic')" aria-label="Toggle italic text" aria-pressed="false"
+                    data-action="toggle-italic">
+                    <em aria-hidden="true">I</em>
+                </button>
+            </div>
+
+            <div class="toolbar-group dark:border-gray-700" role="radiogroup" aria-label="Text alignment">
+                <button class="toolbar-btn dark:text-gray-300 dark:hover:bg-gray-700" id="btn-align-left"
+                    onclick="applyStyle('align', 'left')" aria-label="Align text left" role="radio" aria-checked="true"
+                    data-action="align-left">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M4 12h10M4 18h16"></path>
+                    </svg>
+                </button>
+                <button class="toolbar-btn dark:text-gray-300 dark:hover:bg-gray-700" id="btn-align-center"
+                    onclick="applyStyle('align', 'center')" aria-label="Align text center" role="radio"
+                    aria-checked="false" data-action="align-center">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M7 12h10M4 18h16"></path>
+                    </svg>
+                </button>
+                <button class="toolbar-btn dark:text-gray-300 dark:hover:bg-gray-700" id="btn-align-right"
+                    onclick="applyStyle('align', 'right')" aria-label="Align text right" role="radio"
+                    aria-checked="false" data-action="align-right">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 6h16M10 12h10M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="toolbar-group dark:border-gray-700" role="group" aria-label="Text color">
+                <label for="text-color-picker" class="sr-only">Text color</label>
+                <input type="color" id="text-color-picker" class="w-8 h-8 cursor-pointer border-0 p-0 bg-transparent"
+                    value="#000000" onchange="applyStyle('color', this.value)" aria-label="Select text color"
+                    data-field="text-color">
+            </div>
+
+            <div class="flex-grow"></div>
+            <output class="text-xs text-gray-400" id="selected-field-name" aria-live="polite"
+                aria-label="Currently selected field">No field selected</output>
+        </div>
+    </header>
+
+    <main class="flex-grow flex overflow-hidden" role="main">
+        <aside id="sidebar-panel" role="complementary" aria-label="PDF field list and file controls"
+            class="w-64 bg-white border-r border-gray-200 flex flex-col z-10 flex-shrink-0 transition-all duration-300 ease-in-out dark:bg-gray-800 dark:border-gray-700">
+            <div class="p-4 border-b border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+                <label for="pdf-upload"
+                    class="flex flex-col items-center justify-center w-full h-20 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:bg-white hover:border-blue-500 transition-all bg-white group"
+                    data-action="upload-pdf-dropzone">
+                    <div class="flex flex-row items-center gap-2">
+                        <svg class="w-5 h-5 text-gray-400 group-hover:text-blue-500" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        <span class="text-xs font-medium text-gray-500 group-hover:text-blue-600">Upload PDF</span>
+                    </div>
+                    <input id="pdf-upload" type="file" class="hidden" accept="application/pdf"
+                        aria-label="Upload a fillable PDF file" />
+                </label>
+                <div id="file-name-display"
+                    class="mt-2 text-xs text-gray-600 truncate hidden font-medium pl-2 border-l-2 border-blue-500">
+                </div>
+                <button id="load-sample-btn" onclick="loadSamplePDF()"
+                    class="mt-2 w-full px-3 py-1.5 text-xs bg-purple-50 text-purple-700 rounded-md hover:bg-purple-100 transition-colors border border-purple-200 font-medium"
+                    aria-label="Load the official D&D 5E fillable character sheet" data-action="load-sample">Load
+                    Sample D&D Sheet</button>
+                <button onclick="copyFieldCSV()"
+                    class="mt-2 w-full px-3 py-1.5 text-xs bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors border border-gray-300 font-medium flex items-center justify-center gap-1"
+                    aria-label="Copy all PDF field names and descriptions as CSV to clipboard"
+                    data-action="copy-fields-csv">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3">
+                        </path>
+                    </svg>
+                    Copy Field List (CSV)
+                </button>
+            </div>
+            <nav class="flex-grow overflow-y-auto p-2 bg-white dark:bg-gray-800 dark:text-gray-300"
+                aria-label="Available PDF form fields">
+                <div id="field-list" class="space-y-0.5" role="list"
+                    aria-label="Clickable list of PDF field names - click to add to JSON or upload image"></div>
+            </nav>
+        </aside>
+
+        <section id="json-panel" role="region" aria-label="JSON data editor for PDF form values"
+            class="w-96 bg-gray-900 border-r border-gray-700 flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out dark:border-gray-600">
+            <div
+                class="p-3 border-b border-gray-700 bg-gray-800 flex justify-between items-center shadow-sm z-10 dark:bg-gray-800 dark:border-gray-600">
+                <div class="flex items-center gap-2">
+                    <h2 class="text-sm font-semibold text-gray-200" id="json-panel-heading">JSON Data</h2>
+                    <span id="json-status" role="status" aria-live="polite"
+                        class="text-xs px-1.5 py-0.5 rounded bg-green-500/20 text-green-400">Valid</span>
+                </div>
+                <div class="flex items-center gap-2" role="group" aria-label="JSON file operations">
+                    <button onclick="importJSON()" class="text-xs text-blue-400 hover:text-blue-300 font-medium"
+                        aria-label="Import JSON data from file" data-action="import-json">Import</button>
+                    <button onclick="exportJSON()" class="text-xs text-blue-400 hover:text-blue-300 font-medium"
+                        aria-label="Export current JSON data to file" data-action="export-json">Export</button>
+                    <span class="text-gray-600" aria-hidden="true">|</span>
+                    <button onclick="loadSampleData()" class="text-xs text-blue-400 hover:text-blue-300 font-medium"
+                        aria-label="Reset JSON to sample character data" data-action="reset-json">Reset</button>
+                </div>
+            </div>
+            <div class="flex-grow relative overflow-hidden" id="editor-container">
+                <textarea id="json-input" aria-label="JSON data editor for PDF form values"></textarea>
+            </div>
+        </section>
+
+        <section class="flex-grow bg-gray-200 flex flex-col h-full overflow-hidden relative dark:bg-gray-900"
+            role="region" aria-label="PDF preview and editing area">
+            <div id="render-toast" role="status" aria-live="polite" aria-atomic="true"
+                class="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-gray-900 text-white text-xs px-4 py-2 rounded-lg opacity-0 transition-opacity duration-300 pointer-events-none shadow-lg font-medium min-w-[150px]">
+                <div class="flex justify-between items-center mb-1"><span
+                        id="render-status-text">Rendering...</span><span id="render-percent">0%</span></div>
+                <div class="w-full bg-gray-700 h-1 rounded-full overflow-hidden" role="progressbar" aria-valuenow="0"
+                    aria-valuemin="0" aria-valuemax="100" aria-label="PDF rendering progress">
+                    <div id="render-progress-bar" class="bg-blue-500 h-full w-0 transition-all duration-200 ease-out">
+                    </div>
+                </div>
+            </div>
+            <div id="pdf-container" class="pdf-container flex-grow overflow-auto p-8 flex flex-col items-center"
+                role="document" aria-label="PDF pages with editable form field overlays" tabindex="0">
+                <div id="empty-state" class="text-center mt-32 text-gray-400 select-none w-full" aria-live="polite">
+                    <p class="font-medium text-sm">No PDF Loaded</p>
+                    <p class="text-xs mt-1">Upload a PDF or click "Load Sample D&D Sheet"</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let originalPdfBytes = null;
+        let pdfDoc = null;
+        let currentScale = 1.0;
+        let isAutoFit = true;
+        let isDebugMode = false;
+        let resizeTimeout;
+        let jsonEditor;
+        let fieldMetadata = {}; // Store field positions from pdf-lib
+        let fieldImages = {}; // Store uploaded images (base64)
+
+        // Friendly display names for cryptic field names
+        const FIELD_DISPLAY_NAMES = {
+            // Saving Throw Proficiencies
+            "Check Box 11": "☐ STR Save Prof",
+            "Check Box 12": "☐ DEX Save Prof",
+            "Check Box 13": "☐ CON Save Prof",
+            "Check Box 14": "☐ INT Save Prof",
+            "Check Box 15": "☐ WIS Save Prof",
+            "Check Box 16": "☐ CHA Save Prof",
+
+            // Death Saves
+            "Check Box 17": "☐ Death Save ✓1",
+            "Check Box 18": "☐ Death Save ✓2",
+            "Check Box 19": "☐ Death Save ✓3",
+            "Check Box 20": "☐ Death Save ✗1",
+            "Check Box 21": "☐ Death Save ✗2",
+            "Check Box 22": "☐ Death Save ✗3",
+
+            // Skill Proficiencies
+            "Check Box 23": "☐ Acrobatics Prof",
+            "Check Box 24": "☐ Animal Handling Prof",
+            "Check Box 25": "☐ Arcana Prof",
+            "Check Box 26": "☐ Athletics Prof",
+            "Check Box 27": "☐ Deception Prof",
+            "Check Box 28": "☐ History Prof",
+            "Check Box 29": "☐ Insight Prof",
+            "Check Box 30": "☐ Intimidation Prof",
+            "Check Box 31": "☐ Investigation Prof",
+            "Check Box 32": "☐ Medicine Prof",
+            "Check Box 33": "☐ Nature Prof",
+            "Check Box 34": "☐ Perception Prof",
+            "Check Box 35": "☐ Performance Prof",
+            "Check Box 36": "☐ Persuasion Prof",
+            "Check Box 37": "☐ Religion Prof",
+            "Check Box 38": "☐ Sleight of Hand Prof",
+            "Check Box 39": "☐ Stealth Prof",
+            "Check Box 40": "☐ Survival Prof",
+
+            // Image fields
+            "CHARACTER IMAGE": "🖼️ Character Portrait",
+            "Faction Symbol Image": "🖼️ Faction Symbol",
+
+            // Other fields with trailing spaces or odd names
+            "Race ": "Race",
+            "DEXmod ": "DEX Modifier",
+            "Deception ": "Deception",
+            "History ": "History",
+            "Investigation ": "Investigation",
+            "Perception ": "Perception",
+            "Stealth ": "Stealth",
+            "PersonalityTraits ": "Personality Traits",
+            "CHamod": "CHA Modifier"
+        };
+
+        // Image field detection
+        const IMAGE_FIELDS = ["CHARACTER IMAGE", "Faction Symbol Image"];
+
+        // Manual page overrides for fields with incorrect automatic detection
+        // Page 0 = Stats, Page 1 = Appearance/Backstory, Page 2 = Spellcasting
+        const PAGE_OVERRIDES = {
+            "CHARACTER IMAGE": 1,
+            "Faction Symbol Image": 1,
+            "Age": 1,
+            "Height": 1,
+            "Weight": 1,
+            "Eyes": 1,
+            "Skin": 1,
+            "Hair": 1,
+            "Backstory": 1,
+            "Allies": 1,
+            "FactionName": 1,
+            "Treasure": 1,
+            "CharacterName 2": 1
+        };
+
+        // Style overrides for specific fields to ensure perfect alignment
+        const STYLE_OVERRIDES = {
+            "AC": { fontSize: 24, align: "center", yOffset: -2 },
+            "Initiative": { fontSize: 18, align: "center", yOffset: 0 },
+            "Speed": { fontSize: 18, align: "center", yOffset: 0 },
+            "STR": { fontSize: 24, align: "center", yOffset: 2 },
+            "DEX": { fontSize: 24, align: "center", yOffset: 2 },
+            "CON": { fontSize: 24, align: "center", yOffset: 2 },
+            "INT": { fontSize: 24, align: "center", yOffset: 2 },
+            "WIS": { fontSize: 24, align: "center", yOffset: 2 },
+            "CHA": { fontSize: 24, align: "center", yOffset: 2 },
+            "STRmod": { fontSize: 12, align: "center" },
+            "DEXmod ": { fontSize: 12, align: "center" },
+            "CONmod": { fontSize: 12, align: "center" },
+            "INTmod": { fontSize: 12, align: "center" },
+            "WISmod": { fontSize: 12, align: "center" },
+            "CHamod": { fontSize: 12, align: "center" },
+            "Passive": { fontSize: 18, align: "center", yOffset: 0 },
+            "ProfBonus": { fontSize: 14, align: "center", yOffset: 1 },
+            "HPMax": { fontSize: 12, align: "center" },
+            "HPCurrent": { fontSize: 24, align: "center" }
+        };
+
+        // Field sort order by category (lower = higher priority)
+        function getFieldSortPriority(name) {
+            // Basic info first
+            if (name === "CharacterName" || name === "ClassLevel") return 0;
+            if (name === "Race " || name === "Background" || name === "Alignment" || name === "XP") return 1;
+            if (name === "PlayerName") return 2;
+
+            // Ability scores
+            if (/^(STR|DEX|CON|INT|WIS|CHA)$/.test(name)) return 10;
+            if (/mod/.test(name)) return 11;
+
+            // Combat stats
+            if (["AC", "Initiative", "Speed", "HPMax", "HPCurrent", "HPTemp", "HD", "HDTotal", "ProfBonus"].includes(name)) return 20;
+
+            // Saving throws (prof first, then mod)
+            if (name.startsWith("ST ")) return 30;
+            if (/Check Box 1[1-6]/.test(name)) return 31; // Save proficiencies
+
+            // Skills (arranged alphabetically by skill name via display name)
+            if (/Check Box (2[3-9]|3[0-9]|40)/.test(name)) return 40; // Skill proficiencies
+            if (["Acrobatics", "Animal", "Arcana", "Athletics"].includes(name)) return 41;
+
+            // Death saves
+            if (/Check Box (1[7-9]|2[0-2])/.test(name)) return 50;
+
+            // Image fields
+            if (IMAGE_FIELDS.includes(name)) return 60;
+
+            // Large text fields
+            if (["PersonalityTraits ", "Ideals", "Bonds", "Flaws"].includes(name)) return 70;
+            if (["Features and Traits", "ProficienciesLang", "Equipment", "AttacksSpellcasting"].includes(name)) return 71;
+
+            // Spellcasting (page 3)
+            if (name.includes("Spell") || name.includes("Slots")) return 100;
+
+            return 80; // Default
+        }
+
+        // --- STYLING LOGIC START ---
+        let currentSelectedField = null;
+
+        function getStyle(fieldName) {
+            let style = {};
+            // 1. Start with hardcoded overrides
+            if (STYLE_OVERRIDES[fieldName]) {
+                style = { ...STYLE_OVERRIDES[fieldName] };
+            }
+
+            // 2. Merge user-defined styles from JSON
+            try {
+                // accessing jsonEditor might be risky if called too early, but usually fine
+                if (jsonEditor) {
+                    const data = JSON.parse(jsonEditor.getValue());
+                    if (data._styles && data._styles[fieldName]) {
+                        style = { ...style, ...data._styles[fieldName] };
+                    }
+                }
+            } catch (e) { }
+
+            return style;
+        }
+
+        function applyStyle(prop, value) {
+            if (!currentSelectedField) return;
+
+            try {
+                const data = JSON.parse(jsonEditor.getValue());
+                if (!data._styles) data._styles = {};
+                if (!data._styles[currentSelectedField]) data._styles[currentSelectedField] = {};
+
+                if (value === null || value === '') {
+                    delete data._styles[currentSelectedField][prop];
+                    // Clean up if empty
+                    if (Object.keys(data._styles[currentSelectedField]).length === 0) {
+                        delete data._styles[currentSelectedField];
+                    }
+                } else {
+                    data._styles[currentSelectedField][prop] = value;
+                }
+
+                jsonEditor.setValue(JSON.stringify(data, null, 4));
+                updateToolbarUI();
+                // We need to re-render the preview to show changes
+                updatePreview();
+            } catch (e) {
+                console.error("Error applying style", e);
+            }
+        }
+
+        function toggleStyle(prop) {
+            if (!currentSelectedField) return;
+            const currentStyle = getStyle(currentSelectedField);
+            const currentValue = currentStyle[prop];
+            applyStyle(prop, currentValue ? null : true);
+        }
+
+        function updateToolbarUI() {
+            const fieldName = currentSelectedField;
+            const nameDisplay = document.getElementById('selected-field-name');
+            nameDisplay.textContent = fieldName ? (FIELD_DISPLAY_NAMES[fieldName] || fieldName) : "No field selected";
+
+            if (!fieldName) {
+                document.getElementById('font-size-select').value = "";
+                document.getElementById('text-color-picker').value = "#000000";
+                ['btn-bold', 'btn-italic', 'btn-align-left', 'btn-align-center', 'btn-align-right'].forEach(id => {
+                    document.getElementById(id).classList.remove('active');
+                });
+                return;
+            }
+
+            const style = getStyle(fieldName);
+
+            document.getElementById('font-size-select').value = style.fontSize || "";
+            document.getElementById('text-color-picker').value = style.color || "#000000";
+
+            document.getElementById('btn-bold').classList.toggle('active', !!style.bold);
+            document.getElementById('btn-italic').classList.toggle('active', !!style.italic);
+
+            const align = style.align || 'left';
+            document.getElementById('btn-align-left').classList.toggle('active', align === 'left');
+            document.getElementById('btn-align-center').classList.toggle('active', align === 'center');
+            document.getElementById('btn-align-right').classList.toggle('active', align === 'right');
+        }
+        // --- STYLING LOGIC END ---
+
+        const defaultData = {
+            // Basic Info
+            "CharacterName": "Elara Silverleaf",
+            "ClassLevel": "Druid 5",
+            "Background": "Hermit",
+            "PlayerName": "Player",
+            "Race ": "Wood Elf",
+            "Alignment": "Neutral Good",
+            "XP": "6500",
+
+            // Ability Scores
+            "STR": "10",
+            "STRmod": "+0",
+            "DEX": "14",
+            "DEXmod ": "+2",
+            "CON": "12",
+            "CONmod": "+1",
+            "INT": "13",
+            "INTmod": "+1",
+            "WIS": "18",
+            "WISmod": "+4",
+            "CHA": "8",
+            "CHamod": "-1",
+
+            // Combat Stats
+            "AC": "16",
+            "Initiative": "+2",
+            "Speed": "35",
+            "ProfBonus": "+3",
+            "HPMax": "38",
+            "HPCurrent": "38",
+            "HPTemp": "",
+            "HD": "5d8",
+            "HDTotal": "5d8",
+
+            // Saving Throws
+            "ST Strength": "+0",
+            "ST Dexterity": "+2",
+            "ST Constitution": "+1",
+            "ST Intelligence": "+4",
+            "Check Box 14": true,
+            "ST Wisdom": "+7",
+            "Check Box 15": true,
+            "ST Charisma": "-1",
+
+            // Skills
+            "Acrobatics": "+2",
+            "Animal": "+7",
+            "Check Box 24": true,
+            "Arcana": "+1",
+            "Athletics": "+0",
+            "Deception ": "-1",
+            "History ": "+1",
+            "Insight": "+7",
+            "Check Box 29": true,
+            "Intimidation": "-1",
+            "Investigation ": "+1",
+            "Medicine": "+7",
+            "Check Box 32": true,
+            "Nature": "+4",
+            "Check Box 33": true,
+            "Perception ": "+7",
+            "Check Box 34": true,
+            "Performance": "-1",
+            "Persuasion": "-1",
+            "Religion": "+1",
+            "SleightofHand": "+2",
+            "Stealth ": "+2",
+            "Survival": "+7",
+            "Check Box 40": true,
+
+            // Passive Perception
+            "Passive": "17",
+
+            // Personality
+            "PersonalityTraits ": "I feel tremendous empathy for all who suffer.\nI connect everything that happens to me to a grand cosmic plan.",
+            "Ideals": "Greater Good. My gifts are meant to be shared with all, not used for my own benefit.",
+            "Bonds": "I entered seclusion to hide from those who might still be hunting me.",
+            "Flaws": "I like keeping secrets and won't share them with anyone.",
+
+            // Features & Equipment
+            "Features and Traits": "Druidic\nSpellcasting (WIS)\nWild Shape (CR 1/2)\nCircle of the Land (Forest)\nNatural Recovery\nCircle Spells",
+            "ProficienciesLang": "Languages: Common, Elvish, Druidic, Sylvan\n\nArmor: Light, medium, shields (no metal)\n\nWeapons: Clubs, daggers, darts, javelins, maces, quarterstaffs, scimitars, sickles, slings, spears\n\nTools: Herbalism kit",
+            "Equipment": "Wooden shield (+2 AC)\nScimitar\nLeather armor\nDruidic focus (staff)\nExplorer's pack\nHerbalism kit\n23 GP",
+
+            // Attacks
+            "AttacksSpellcasting": "Scimitar: +5, 1d6+2 slashing\nProduce Flame: +7, 2d8 fire\nShillelagh: +7, 1d8+4 bludg.\nThunderwave: DC 15, 2d8 thunder",
+
+            // Spellcasting (Page 3)
+            "Spellcasting Class 2": "Druid",
+            "SpellscastingAbility 2": "WIS",
+            "SpellSaveDC  2": "15",
+            "SpellAtkBonus 2": "+7",
+
+            // Notes for additional pages
+            "Backstory": "Elara spent eight years in isolated seclusion in the heart of an ancient forest, communing with nature spirits and learning the old ways of druidic magic. She emerged when visions warned her of a growing darkness threatening the natural world.",
+            "Allies": "Circle of the Ancient Oak - A secretive druid circle that guards sacred groves throughout the realm.",
+            "FactionName": "Emerald Enclave",
+            "Treasure": "A crystal vial containing water from a sacred spring (worth 50gp)\nA lock of silver hair from a dryad friend"
+        };
+
+        // Initialize CodeMirror
+        document.addEventListener('DOMContentLoaded', function () {
+            jsonEditor = CodeMirror.fromTextArea(document.getElementById('json-input'), {
+                mode: { name: "javascript", json: true },
+                theme: "dracula",
+                lineNumbers: true,
+                lineWrapping: true,
+                matchBrackets: true,
+                autoCloseBrackets: true,
+                tabSize: 4,
+                indentWithTabs: false
+            });
+            jsonEditor.setValue(JSON.stringify(defaultData, null, 4));
+            jsonEditor.on('change', validateJson);
+            jsonEditor.on('blur', () => { if (originalPdfBytes) updatePreview(); });
+            validateJson();
+        });
+
+        function validateJson() {
+            const statusEl = document.getElementById('json-status');
+            try {
+                JSON.parse(jsonEditor.getValue());
+                statusEl.textContent = 'Valid';
+                statusEl.className = 'text-xs px-1.5 py-0.5 rounded bg-green-500/20 text-green-400';
+                return true;
+            } catch (e) {
+                statusEl.textContent = 'Invalid';
+                statusEl.className = 'text-xs px-1.5 py-0.5 rounded bg-red-500/20 text-red-400';
+                return false;
+            }
+        }
+
+        function loadSampleData() {
+            jsonEditor.setValue(JSON.stringify(defaultData, null, 4));
+            validateJson();
+        }
+
+        async function loadSamplePDF() {
+            const btn = document.getElementById('load-sample-btn');
+            btn.textContent = 'Loading...';
+            btn.disabled = true;
+            try {
+                const response = await fetch('5E_CharacterSheet_Fillable.pdf');
+                if (!response.ok) throw new Error('Local file not found');
+                const arrayBuffer = await response.arrayBuffer();
+                originalPdfBytes = new Uint8Array(arrayBuffer);
+                document.getElementById('file-name-display').textContent = '5E_CharacterSheet_Fillable.pdf';
+                document.getElementById('file-name-display').classList.remove('hidden');
+                await processPdfBytes();
+                btn.textContent = 'Reload Sample';
+            } catch (err) {
+                console.error('Error loading sample PDF:', err);
+                alert('Sample PDF not found locally.\n\nPlease download from:\nhttps://media.wizards.com/2016/dnd/downloads/5E_CharacterSheet_Fillable.pdf\n\nThen place it in the same folder as main.html, or use the Upload button.');
+                btn.textContent = 'Load Sample D&D Sheet';
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function processPdfBytes() {
+            // Use pdf-lib to extract field metadata (positions, sizes)
+            const pdfLibDoc = await PDFLib.PDFDocument.load(originalPdfBytes.slice());
+            const form = pdfLibDoc.getForm();
+            const fields = form.getFields();
+            const pages = pdfLibDoc.getPages();
+
+            fieldMetadata = {};
+            const listContainer = document.getElementById('field-list');
+            listContainer.innerHTML = '';
+
+            // Build page annotation map: fieldName -> pageIndex
+            // We iterate through each page's annotations and extract field names directly
+            const fieldNameToPage = new Map();
+            pages.forEach((page, pageIndex) => {
+                const annots = page.node.Annots();
+                if (annots) {
+                    for (let i = 0; i < annots.size(); i++) {
+                        try {
+                            const annotRef = annots.get(i);
+                            // Dereference the annotation to get its dictionary
+                            const annotDict = pdfLibDoc.context.lookup(annotRef);
+                            if (annotDict && annotDict.get) {
+                                // Get the field name from T (text) entry
+                                const tValue = annotDict.get(PDFLib.PDFName.of('T'));
+                                if (tValue) {
+                                    let fieldName = '';
+                                    if (tValue.decodeText) {
+                                        fieldName = tValue.decodeText();
+                                    } else if (tValue.asString) {
+                                        fieldName = tValue.asString();
+                                    } else {
+                                        fieldName = String(tValue);
+                                    }
+                                    if (fieldName) {
+                                        fieldNameToPage.set(fieldName, pageIndex);
+                                    }
+                                }
+                            }
+                        } catch (e) { /* ignore individual annotation errors */ }
+                    }
+                }
+            });
+
+            console.log('Field name to page map built with', fieldNameToPage.size, 'entries');
+            console.log('Sample entries:', Array.from(fieldNameToPage.entries()).slice(0, 5));
+
+            // Sort fields by category for better UX
+            const sortedFields = [...fields].sort((a, b) => {
+                const nameA = a.getName();
+                const nameB = b.getName();
+                const priorityA = getFieldSortPriority(nameA);
+                const priorityB = getFieldSortPriority(nameB);
+                if (priorityA !== priorityB) return priorityA - priorityB;
+                // Within same priority, sort alphabetically by display name
+                const displayA = FIELD_DISPLAY_NAMES[nameA] || nameA;
+                const displayB = FIELD_DISPLAY_NAMES[nameB] || nameB;
+                return displayA.localeCompare(displayB);
+            });
+
+            sortedFields.forEach(field => {
+                const name = field.getName();
+                const type = field.constructor.name;
+                const isCheckbox = type === 'PDFCheckBox';
+
+                // Get widget rectangle
+                try {
+                    const widgets = field.acroField.getWidgets();
+                    if (widgets.length > 0) {
+                        const widget = widgets[0];
+                        const rect = widget.getRectangle();
+
+                        // Find page from our map, with manual overrides for known problem fields
+                        let pageIndex = fieldNameToPage.has(name) ? fieldNameToPage.get(name) : 0;
+
+                        // Apply manual page overrides for fields with incorrect detection
+                        if (PAGE_OVERRIDES.hasOwnProperty(name)) {
+                            pageIndex = PAGE_OVERRIDES[name];
+                        }
+
+                        // Debug: log page assignment for troubleshooting
+                        if (name.includes('Spells') || name.includes('Backstory') || name.includes('Allies') || name.includes('IMAGE') || name.includes('Symbol')) {
+                            console.log(`Field "${name}" assigned to page ${pageIndex} (override: ${PAGE_OVERRIDES.hasOwnProperty(name)})`);
+                        }
+
+                        fieldMetadata[name] = {
+                            x: rect.x,
+                            y: rect.y,
+                            width: rect.width,
+                            height: rect.height,
+                            pageIndex: pageIndex,
+                            pageHeight: pages[pageIndex].getHeight(),
+                            isCheckbox: isCheckbox,
+                            isMultiline: rect.height > 25 // Heuristic for multiline
+                        };
+                    }
+                } catch (e) {
+                    console.warn('Could not get rect for field:', name);
+                }
+
+                // Build field list UI
+                const displayName = FIELD_DISPLAY_NAMES[name] || name;
+                const isImageField = IMAGE_FIELDS.includes(name);
+
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-1.5 hover:bg-blue-50 rounded cursor-pointer group transition-colors border-l-2 border-transparent hover:border-blue-400 hover:pl-2 transition-all";
+
+                if (isImageField) {
+                    // Image fields trigger file upload
+                    div.onclick = () => triggerImageUpload(name);
+                    const dotColor = fieldImages[name] ? 'bg-green-500' : 'bg-purple-400';
+                    div.innerHTML = `<div class="flex items-center gap-2 overflow-hidden"><span class="w-1.5 h-1.5 rounded-full ${dotColor} flex-shrink-0"></span><code class="text-[10px] font-bold text-gray-600 truncate select-all font-mono" title="${name}">${displayName}</code></div>`;
+                } else {
+                    // Regular fields add to JSON
+                    div.onclick = () => addKeyToJSON(name);
+                    const dotColor = isCheckbox ? 'bg-orange-400' : 'bg-blue-400';
+                    div.innerHTML = `<div class="flex items-center gap-2 overflow-hidden"><span class="w-1.5 h-1.5 rounded-full ${dotColor} flex-shrink-0"></span><code class="text-[10px] font-bold text-gray-600 truncate select-all font-mono" title="${name}">${displayName}</code></div>`;
+                }
+                listContainer.appendChild(div);
+            });
+
+            document.getElementById('download-btn').disabled = false;
+            document.getElementById('download-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+            document.getElementById('verify-btn').disabled = false;
+            document.getElementById('verify-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+            updatePreview();
+        }
+
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => { if (isAutoFit && originalPdfBytes) updatePreview(); }, 100);
+        });
+
+        function toggleAutoFit() {
+            isAutoFit = !isAutoFit;
+            document.getElementById('btn-autofit').className = isAutoFit
+                ? 'ml-1 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded border border-blue-200 font-medium'
+                : 'ml-1 px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded border border-gray-200 font-medium';
+            updatePreview();
+        }
+
+        function updateZoomLabel(value) {
+            document.getElementById('zoom-level').textContent = value + "%";
+        }
+
+        function applyZoom(value) {
+            isAutoFit = false;
+            document.getElementById('btn-autofit').className = 'ml-1 px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded border border-gray-200 font-medium dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600';
+            currentScale = parseInt(value) / 100;
+            updatePreview();
+        }
+
+        function toggleDebug() {
+            isDebugMode = !isDebugMode;
+            const btn = document.getElementById('debug-toggle-btn');
+            btn.setAttribute('aria-pressed', isDebugMode.toString());
+            if (isDebugMode) {
+                btn.classList.remove('text-gray-600', 'dark:text-gray-400');
+                btn.classList.add('text-red-500', 'dark:text-red-400');
+            } else {
+                btn.classList.remove('text-red-500', 'dark:text-red-400');
+                btn.classList.add('text-gray-600', 'dark:text-gray-400');
+            }
+            updatePreview();
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('dark-mode-icon').textContent = isDark ? '☀' : '🌙';
+            const btn = document.getElementById('dark-mode-btn');
+            if (btn) btn.setAttribute('aria-pressed', isDark.toString());
+        }
+
+        function togglePanel(panelName) {
+            let el;
+            let btn;
+
+            if (panelName === 'sidebar') {
+                el = document.getElementById('sidebar-panel');
+                btn = document.getElementById('btn-toggle-sidebar');
+            } else if (panelName === 'json') {
+                el = document.getElementById('json-panel');
+                btn = document.getElementById('btn-toggle-json');
+            } else if (panelName === 'toolbar') {
+                el = document.getElementById('formatting-toolbar');
+                btn = document.getElementById('btn-toggle-toolbar');
+            }
+
+            if (!el) return;
+
+            // Toggle logic
+            const isVisible = el.style.display !== 'none';
+            if (isVisible) {
+                el.style.display = 'none';
+                btn.classList.remove('text-blue-600');
+                btn.classList.add('text-gray-400', 'line-through');
+                btn.setAttribute('aria-expanded', 'false');
+            } else {
+                el.style.display = 'flex';
+                btn.classList.add('text-blue-600');
+                btn.classList.remove('text-gray-400', 'line-through');
+                btn.setAttribute('aria-expanded', 'true');
+            }
+
+            // Special handling if we closed toolbar, resize content
+            if (panelName === 'toolbar') {
+                // Wait for animation or just trigger
+            }
+            // Trigger resize to update PDF scale/position if needed
+            window.dispatchEvent(new Event('resize'));
+        }
+
+        // Image upload handling
+        let currentImageFieldName = null;
+
+        function triggerImageUpload(fieldName) {
+            currentImageFieldName = fieldName;
+            // Create a temporary file input
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = handleImageUpload;
+            input.click();
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                // Convert all images to PNG to ensure compatibility with pdf-lib
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+
+                    // Force PNG format
+                    const pngData = canvas.toDataURL('image/png');
+                    fieldImages[currentImageFieldName] = pngData;
+
+                    console.log(`Image uploaded for ${currentImageFieldName} (converted to PNG)`);
+                    updatePreview();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Update JSON from editable overlay
+        function updateFieldFromOverlay(fieldName, element) {
+            // Use innerText to preserve newlines, but fall back to textContent if needed
+            const newValue = element.innerText;
+            const trimmedValue = newValue.trim();
+            try {
+                const currentData = JSON.parse(jsonEditor.getValue());
+
+                if (trimmedValue === '') {
+                    // Remove the field if empty
+                    delete currentData[fieldName];
+                } else {
+                    // Update the field
+                    currentData[fieldName] = trimmedValue;
+                }
+
+                jsonEditor.setValue(JSON.stringify(currentData, null, 2));
+                // Don't trigger full preview update - would lose focus and be jarring
+            } catch (err) {
+                console.error('Error updating JSON:', err);
+            }
+        }
+
+        // Toggle checkbox value in JSON
+        function toggleCheckbox(fieldName, newValue) {
+            try {
+                const currentData = JSON.parse(jsonEditor.getValue());
+
+                if (newValue) {
+                    currentData[fieldName] = true;
+                } else {
+                    // Remove the field if unchecked (or set to false)
+                    delete currentData[fieldName];
+                }
+
+                jsonEditor.setValue(JSON.stringify(currentData, null, 2));
+                updatePreview();
+            } catch (err) {
+                console.error('Error toggling checkbox:', err);
+            }
+        }
+
+        document.getElementById('pdf-upload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            document.getElementById('file-name-display').textContent = file.name;
+            document.getElementById('file-name-display').classList.remove('hidden');
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                originalPdfBytes = new Uint8Array(arrayBuffer);
+                await processPdfBytes();
+            } catch (err) { console.error(err); alert("Error loading PDF."); }
+        });
+
+        function addKeyToJSON(key) {
+            try {
+                let obj = JSON.parse(jsonEditor.getValue());
+                if (!obj.hasOwnProperty(key)) {
+                    obj[key] = "";
+                    jsonEditor.setValue(JSON.stringify(obj, null, 4));
+                }
+            } catch (e) {
+                console.warn('Could not add key to invalid JSON');
+            }
+        }
+
+        // Calculate optimal font size based on text and container
+        function calculateFontSize(text, width, height, isMultiline) {
+            if (!text) return 10;
+
+            const textLength = text.length;
+
+            if (isMultiline) {
+                // For multiline: fit based on content density
+                const lines = text.split('\n').length;
+                const estimatedCharsPerLine = width / 5; // Rough char width
+                const estimatedLines = Math.ceil(textLength / estimatedCharsPerLine);
+                const totalLines = Math.max(lines, estimatedLines);
+
+                // Calculate font size to fit all lines
+                const maxFontSize = (height / totalLines) * 0.85;
+                return Math.min(Math.max(maxFontSize, 6), 11);
+            } else {
+                // For single line: different strategy for short vs long text
+                if (textLength <= 3) {
+                    // Very short text (like ability scores): fill the box
+                    return Math.min(height * 0.65, 20);
+                } else if (textLength <= 6) {
+                    // Short text (like modifiers): medium size
+                    return Math.min(height * 0.55, 16);
+                } else {
+                    // Longer text: fit to width
+                    const maxByHeight = height * 0.6;
+                    const maxByWidth = (width / textLength) * 1.6;
+                    return Math.min(Math.max(Math.min(maxByHeight, maxByWidth), 7), 14);
+                }
+            }
+        }
+
+        async function updatePreview() {
+            if (!originalPdfBytes) return;
+            const toast = document.getElementById('render-toast');
+            const statusText = document.getElementById('render-status-text');
+            const percentText = document.getElementById('render-percent');
+            const progressBar = document.getElementById('render-progress-bar');
+            toast.classList.remove('opacity-0');
+            progressBar.style.width = '0%';
+            percentText.textContent = '0%';
+            statusText.textContent = "Rendering PDF...";
+
+            // Calculate scale
+            if (isAutoFit) {
+                const containerW = document.getElementById('pdf-container').clientWidth;
+                const loadingTask = pdfjsLib.getDocument({ data: originalPdfBytes.slice(), disableWorker: true });
+                const pdf = await loadingTask.promise;
+                const page = await pdf.getPage(1);
+                const viewport = page.getViewport({ scale: 1 });
+                currentScale = (containerW - 64) / viewport.width;
+                document.getElementById('zoom-level').textContent = Math.round(currentScale * 100) + "%";
+            }
+
+            try {
+                // Get JSON data
+                let dataMap = {};
+                try { dataMap = JSON.parse(jsonEditor.getValue()); } catch (e) { dataMap = {}; }
+
+                // Render PDF pages with pdf.js (unfilled, as background)
+                const loadingTask = pdfjsLib.getDocument({ data: originalPdfBytes.slice(), disableWorker: true });
+                const pdf = await loadingTask.promise;
+                const container = document.getElementById('pdf-container');
+                container.innerHTML = '';
+
+                const totalPages = pdf.numPages;
+
+                for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                    statusText.textContent = `Rendering Page ${pageNum}/${totalPages}`;
+                    const percent = Math.round(((pageNum - 0.5) / totalPages) * 100);
+                    progressBar.style.width = `${percent}%`;
+                    percentText.textContent = `${percent}%`;
+
+                    const page = await pdf.getPage(pageNum);
+                    const viewport = page.getViewport({ scale: currentScale });
+
+                    // Create wrapper for canvas + overlays
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'page-wrapper';
+                    wrapper.style.width = viewport.width + 'px';
+                    wrapper.style.height = viewport.height + 'px';
+
+                    // Render canvas
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d');
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    canvas.style.display = 'block';
+                    wrapper.appendChild(canvas);
+
+                    await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+                    // Add field overlays for this page - now editable!
+                    const pageIndex = pageNum - 1;
+                    Object.entries(fieldMetadata).forEach(([fieldName, meta]) => {
+                        if (meta.pageIndex !== pageIndex) return;
+
+                        // Convert PDF coordinates to screen coordinates
+                        const scaledX = meta.x * currentScale;
+                        const scaledY = (meta.pageHeight - meta.y - meta.height) * currentScale;
+                        const scaledWidth = meta.width * currentScale;
+                        const scaledHeight = meta.height * currentScale;
+
+                        // Check if this is an image field
+                        if (IMAGE_FIELDS.includes(fieldName)) {
+                            // Create image upload box
+                            const uploadBox = document.createElement('div');
+                            uploadBox.className = 'image-upload-box' + (fieldImages[fieldName] ? ' has-image' : '');
+                            uploadBox.style.left = scaledX + 'px';
+                            uploadBox.style.top = scaledY + 'px';
+                            uploadBox.style.width = scaledWidth + 'px';
+                            uploadBox.style.height = scaledHeight + 'px';
+                            uploadBox.title = fieldName;
+                            uploadBox.onclick = () => triggerImageUpload(fieldName);
+
+                            // Add upload content (icon, text, size hint)
+                            const content = document.createElement('div');
+                            content.className = 'upload-content';
+                            const sizeHint = fieldName === 'CHARACTER IMAGE'
+                                ? 'Portrait: ~200×280px (2:3)'
+                                : 'Square: ~150×150px (1:1)';
+                            content.innerHTML = `
+                                <div class="upload-icon">📷</div>
+                                <div class="upload-text">Click to upload</div>
+                                <div class="size-hint">${sizeHint}</div>
+                            `;
+                            uploadBox.appendChild(content);
+
+                            // Add image if uploaded
+                            if (fieldImages[fieldName]) {
+                                const img = document.createElement('img');
+                                img.src = fieldImages[fieldName];
+                                uploadBox.appendChild(img);
+                            }
+
+                            wrapper.appendChild(uploadBox);
+                            return;
+                        }
+
+                        // Check if this is a checkbox
+                        const isCheckboxField = meta.isCheckbox || fieldName.includes('Check Box');
+
+                        if (isCheckboxField) {
+                            // Checkbox overlay - clickable to toggle
+                            const value = dataMap[fieldName];
+                            const isChecked = value === true || value === "true";
+                            const checkbox = document.createElement('div');
+                            checkbox.className = 'field-overlay checkbox-overlay' + (isChecked ? ' checked' : '');
+                            checkbox.style.left = scaledX + 'px';
+                            checkbox.style.top = scaledY + 'px';
+                            checkbox.style.width = scaledWidth + 'px';
+                            checkbox.style.height = scaledHeight + 'px';
+                            checkbox.style.fontSize = (scaledHeight * 0.8) + 'px';
+                            checkbox.title = FIELD_DISPLAY_NAMES[fieldName] || fieldName;
+                            checkbox.onclick = () => toggleCheckbox(fieldName, !isChecked);
+                            wrapper.appendChild(checkbox);
+                        } else {
+                            // Text field overlay - EDITABLE
+                            const value = dataMap[fieldName];
+                            const textValue = value !== undefined ? String(value) : '';
+
+                            // Skip rendering booleans as text
+                            if (textValue === 'true' || textValue === 'false') return;
+
+                            const fontSize = calculateFontSize(textValue || 'placeholder', meta.width, meta.height, meta.isMultiline);
+                            const scaledFontSize = fontSize * currentScale;
+
+                            const overlay = document.createElement('div');
+                            let className = 'field-overlay editable';
+                            if (meta.isMultiline) {
+                                className += ' multiline';
+                            } else if (textValue.length <= 3 && textValue.length > 0) {
+                                className += ' centered';
+                            }
+                            overlay.className = className;
+                            overlay.contentEditable = 'true';
+                            overlay.style.left = scaledX + 'px';
+                            overlay.style.top = scaledY + 'px';
+                            overlay.style.width = scaledWidth + 'px';
+                            overlay.style.height = scaledHeight + 'px';
+                            overlay.style.fontSize = scaledFontSize + 'px';
+                            overlay.style.lineHeight = meta.isMultiline ? '1.15' : '1';
+                            overlay.style.whiteSpace = meta.isMultiline ? 'pre-wrap' : 'nowrap';
+                            overlay.setAttribute('data-field', fieldName);
+                            overlay.setAttribute('data-placeholder', FIELD_DISPLAY_NAMES[fieldName] || fieldName);
+                            overlay.title = FIELD_DISPLAY_NAMES[fieldName] || fieldName;
+                            if (textValue) overlay.textContent = textValue;
+
+                            // Sync to JSON on input
+                            overlay.addEventListener('input', () => updateFieldFromOverlay(fieldName, overlay));
+                            overlay.addEventListener('keydown', (e) => {
+                                if (e.key === 'Enter' && !meta.isMultiline) {
+                                    e.preventDefault();
+                                    overlay.blur();
+                                }
+                            });
+
+                            // Apply styles (merged from overrides + user styles)
+                            const style = getStyle(fieldName);
+
+                            // Font Size
+                            let finalFontSize = fontSize;
+                            if (style.fontSize) {
+                                finalFontSize = parseFloat(style.fontSize);
+                            }
+                            overlay.style.fontSize = (finalFontSize * currentScale) + 'px';
+
+                            // Alignment
+                            if (style.align) overlay.style.textAlign = style.align;
+
+                            // Color
+                            if (style.color) overlay.style.color = style.color;
+
+                            // Bold/Italic
+                            if (style.bold) overlay.style.fontWeight = 'bold';
+                            if (style.italic) overlay.style.fontStyle = 'italic';
+
+                            // Offsets
+                            if (style.yOffset) overlay.style.top = (scaledY + (style.yOffset * currentScale)) + 'px';
+                            if (style.xOffset) overlay.style.left = (scaledX + (style.xOffset * currentScale)) + 'px';
+
+                            // Center vertically logic
+                            if (!meta.isMultiline && style.align === 'center') {
+                                overlay.style.display = 'flex';
+                                overlay.style.alignItems = 'center';
+                                overlay.style.justifyContent = 'center';
+                            }
+
+                            // Focus handler for toolbar
+                            overlay.addEventListener('focus', () => {
+                                currentSelectedField = fieldName;
+                                updateToolbarUI();
+                            });
+
+                            // Click handler to ensure selection works even if already focused
+                            overlay.onclick = (e) => {
+                                e.stopPropagation(); // Prevent deselecting
+                                currentSelectedField = fieldName;
+                                updateToolbarUI();
+                            };
+
+                            wrapper.appendChild(overlay);
+                        }
+                    });
+
+                    // Debug mode: draw field boundaries for ALL fields
+                    if (isDebugMode) {
+                        Object.entries(fieldMetadata).forEach(([fieldName, meta]) => {
+                            if (meta.pageIndex !== pageIndex) return;
+
+                            const scaledX = meta.x * currentScale;
+                            const scaledY = (meta.pageHeight - meta.y - meta.height) * currentScale;
+                            const scaledWidth = meta.width * currentScale;
+                            const scaledHeight = meta.height * currentScale;
+
+                            const debugBox = document.createElement('div');
+                            debugBox.className = 'debug-box' + (meta.isCheckbox ? ' checkbox' : '');
+                            debugBox.style.left = scaledX + 'px';
+                            debugBox.style.top = scaledY + 'px';
+                            debugBox.style.width = scaledWidth + 'px';
+                            debugBox.style.height = scaledHeight + 'px';
+
+                            const label = document.createElement('span');
+                            label.className = 'debug-label';
+                            label.textContent = fieldName;
+                            debugBox.appendChild(label);
+
+                            wrapper.appendChild(debugBox);
+                        });
+                    }
+
+                    // Render uploaded images at field positions
+                    Object.entries(fieldImages).forEach(([fieldName, imageData]) => {
+                        if (!fieldMetadata[fieldName]) return;
+                        const meta = fieldMetadata[fieldName];
+                        if (meta.pageIndex !== pageIndex) return;
+
+                        const scaledX = meta.x * currentScale;
+                        const scaledY = (meta.pageHeight - meta.y - meta.height) * currentScale;
+                        const scaledWidth = meta.width * currentScale;
+                        const scaledHeight = meta.height * currentScale;
+
+                        const img = document.createElement('img');
+                        img.src = imageData;
+                        img.style.position = 'absolute';
+                        img.style.left = scaledX + 'px';
+                        img.style.top = scaledY + 'px';
+                        img.style.width = scaledWidth + 'px';
+                        img.style.height = scaledHeight + 'px';
+                        img.style.objectFit = 'cover';
+                        img.style.pointerEvents = 'none';
+                        img.title = fieldName;
+                        wrapper.appendChild(img);
+                    });
+
+                    container.appendChild(wrapper);
+                }
+
+                statusText.textContent = "Complete";
+                progressBar.style.width = '100%';
+                percentText.textContent = '100%';
+            } catch (error) {
+                console.error('Rendering error:', error);
+                statusText.textContent = "Error";
+            }
+            finally { setTimeout(() => { toast.classList.add('opacity-0'); }, 800); }
+        }
+
+
+        // --- NEW FEATURES START ---
+        function copyFieldCSV() {
+            const lines = ["Field ID,Description"];
+            const sortedFields = Object.keys(fieldMetadata).sort();
+
+            sortedFields.forEach(key => {
+                const desc = FIELD_DISPLAY_NAMES[key] || key;
+                // Escape quotes if needed
+                const safeDesc = desc.includes(',') ? `"${desc}"` : desc;
+                lines.push(`${key},${safeDesc}`);
+            });
+
+            const csvContent = lines.join('\n');
+            navigator.clipboard.writeText(csvContent).then(() => {
+                alert('Field list copied to clipboard as CSV!');
+            }).catch(err => {
+                console.error('Failed to copy: ', err);
+            });
+        }
+
+        function exportJSON() {
+            try {
+                const data = jsonEditor.getValue();
+                // Validate first
+                JSON.parse(data);
+
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'character_data.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                alert('Invalid JSON, cannot export.');
+            }
+        }
+
+        function importJSON() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = event => {
+                    try {
+                        const json = JSON.parse(event.target.result);
+                        jsonEditor.setValue(JSON.stringify(json, null, 4));
+                        updatePreview();
+                    } catch (err) {
+                        alert('Invalid JSON file.');
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+        // --- NEW FEATURES END ---
+
+        // Download uses pdf-lib to actually fill the PDF
+        async function downloadPDF() {
+            const blob = await generatePDFBlob('download-btn');
+            if (blob) {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `character_sheet_filled.pdf`;
+                link.click();
+            }
+        }
+
+        async function generatePDFBlob(callerId) {
+            if (!originalPdfBytes) return;
+            if (!validateJson()) return;
+
+            const btn = document.getElementById(callerId || 'download-btn');
+            const originalText = btn.textContent;
+            btn.textContent = 'Generating...';
+            btn.disabled = true;
+
+            try {
+                const pdfDoc = await PDFLib.PDFDocument.load(originalPdfBytes.slice());
+                const form = pdfDoc.getForm();
+                const pages = pdfDoc.getPages();
+
+                // 1. Embed and draw images
+                for (const [fieldName, dataUrl] of Object.entries(fieldImages)) {
+                    if (!dataUrl) continue;
+
+                    try {
+                        let image;
+                        if (dataUrl.startsWith('data:image/png')) {
+                            image = await pdfDoc.embedPng(dataUrl);
+                        } else if (dataUrl.startsWith('data:image/jpeg') || dataUrl.startsWith('data:image/jpg')) {
+                            image = await pdfDoc.embedJpg(dataUrl);
+                        }
+
+                        // Find field location
+                        const meta = fieldMetadata[fieldName];
+                        if (image && meta) {
+                            const page = pages[meta.pageIndex];
+                            page.drawImage(image, {
+                                x: meta.x,
+                                y: meta.y,
+                                width: meta.width,
+                                height: meta.height
+                            });
+                        }
+                    } catch (err) { console.error(`Failed to embed image for ${fieldName}`, err); }
+                }
+
+                // 2. Fill form data using DIRECT DRAWING (Bypassing Form Fields)
+                let dataMap = {};
+                try { dataMap = JSON.parse(jsonEditor.getValue()); } catch (e) { return; }
+
+                // Embed fonts
+                const fontRegular = await pdfDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+                const fontBold = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBold);
+                const fontItalic = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaOblique);
+                const fontBoldItalic = await pdfDoc.embedFont(PDFLib.StandardFonts.HelveticaBoldOblique);
+                const fontZapf = await pdfDoc.embedFont(PDFLib.StandardFonts.ZapfDingbats);
+
+                const getFont = (isBold, isItalic) => {
+                    if (isBold && isItalic) return fontBoldItalic;
+                    if (isBold) return fontBold;
+                    if (isItalic) return fontItalic;
+                    return fontRegular;
+                };
+
+                const hexToRgb = (hex) => {
+                    if (!hex) return PDFLib.rgb(0, 0, 0);
+                    const r = parseInt(hex.slice(1, 3), 16) / 255;
+                    const g = parseInt(hex.slice(3, 5), 16) / 255;
+                    const b = parseInt(hex.slice(5, 7), 16) / 255;
+                    return PDFLib.rgb(r, g, b);
+                };
+
+                for (const [fieldName, value] of Object.entries(dataMap)) {
+                    if (!fieldMetadata[fieldName]) continue;
+                    const meta = fieldMetadata[fieldName];
+                    const page = pages[meta.pageIndex];
+
+                    if (!page) continue;
+                    if (IMAGE_FIELDS.includes(fieldName)) continue;
+
+                    const isCheckbox = meta.isCheckbox || fieldName.includes('Check Box');
+
+                    if (isCheckbox) {
+                        if (value === true || value === "true") {
+                            const fontSize = meta.height * 0.8;
+                            try {
+                                // Try drawing checkmark with ZapfDingbats using correct Unicode
+                                const checkMark = '\u2714'; // Heavy Check Mark
+                                const textWidth = fontZapf.widthOfTextAtSize(checkMark, fontSize);
+                                const x = meta.x + (meta.width - textWidth) / 2;
+                                const y = meta.y + (meta.height - fontSize) / 2;
+
+                                page.drawText(checkMark, {
+                                    x: x,
+                                    y: y,
+                                    size: fontSize,
+                                    font: fontZapf,
+                                    color: PDFLib.rgb(0, 0, 0)
+                                });
+                            } catch (e) {
+                                // Fallback to X if ZapfDingbats encoding fails
+                                const textWidth = fontRegular.widthOfTextAtSize('X', fontSize);
+                                const x = meta.x + (meta.width - textWidth) / 2;
+                                const y = meta.y + (meta.height - fontSize) / 2 + 2;
+
+                                page.drawText('X', {
+                                    x: x,
+                                    y: y,
+                                    size: fontSize,
+                                    font: fontRegular,
+                                    color: PDFLib.rgb(0, 0, 0)
+                                });
+                            }
+                        }
+                    }
+                    else {
+                        let text = String(value);
+                        if (!text) continue;
+
+                        // Resolve style
+                        const style = getStyle(fieldName);
+
+                        // Determine Font
+                        const currentFont = getFont(style.bold, style.italic);
+
+                        // Determine Size
+                        let fontSize = 10;
+                        if (style.fontSize) {
+                            fontSize = parseFloat(style.fontSize);
+                        } else {
+                            fontSize = calculateFontSize(text, meta.width, meta.height, meta.isMultiline);
+                        }
+
+                        // Determine Color
+                        const color = style.color ? hexToRgb(style.color) : PDFLib.rgb(0, 0, 0);
+
+                        // Determine Alignment
+                        const align = style.align || 'left';
+
+                        // Measure text
+                        const measureText = (t) => currentFont.widthOfTextAtSize(t, fontSize);
+
+                        let x = meta.x + 2;
+                        let y = meta.y + 2;
+
+                        if (align === 'center') {
+                            const textWidth = measureText(text);
+                            x = meta.x + (meta.width - textWidth) / 2;
+                        } else if (align === 'right') {
+                            const textWidth = measureText(text);
+                            x = meta.x + meta.width - textWidth - 2;
+                        }
+
+                        // Vertical Alignment
+                        if (!meta.isMultiline) {
+                            y = meta.y + (meta.height - fontSize) / 2 + 2;
+                        } else {
+                            y = meta.y + meta.height - fontSize - 2;
+                        }
+
+                        // Offsets
+                        if (style.yOffset) y += style.yOffset;
+                        if (style.xOffset) x += style.xOffset;
+
+                        // Draw
+                        if (meta.isMultiline) {
+                            page.drawText(text, {
+                                x: x,
+                                y: y,
+                                size: fontSize,
+                                font: currentFont,
+                                color: color,
+                                maxWidth: meta.width - 4,
+                                lineHeight: fontSize * 1.15,
+                                wordBreaks: [" "]
+                            });
+                        } else {
+                            page.drawText(text, {
+                                x: x,
+                                y: y,
+                                size: fontSize,
+                                font: currentFont,
+                                color: color
+                            });
+                        }
+                    }
+                }
+
+                try {
+                    form.flatten();
+                } catch (e) { console.warn("Could not flatten form", e); }
+
+                const filledBytes = await pdfDoc.save();
+                const blob = new Blob([filledBytes], { type: "application/pdf" });
+
+                return blob;
+            } catch (error) {
+                console.error('Error filling PDF:', error);
+                alert('Error creating PDF. Check console for details.');
+                return null;
+            } finally {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function verifyPDF() {
+            const blob = await generatePDFBlob('verify-btn');
+            if (!blob) return;
+
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+
+</html>
