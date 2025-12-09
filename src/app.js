@@ -91,7 +91,7 @@ let originalPdfBytes = null;
 
         // Style overrides for specific fields to ensure perfect alignment
         const STYLE_OVERRIDES = {
-            "AC": { fontSize: 24, align: "center", yOffset: -2 },
+            "AC": { fontSize: 24, align: "center", yOffset: 10 },
             "Initiative": { fontSize: 18, align: "center", yOffset: 0 },
             "Speed": { fontSize: 18, align: "center", yOffset: 0 },
             "STR": { fontSize: 24, align: "center", yOffset: 2 },
@@ -955,7 +955,7 @@ let originalPdfBytes = null;
                     if (style.color) overlay.style.color = style.color;
                     if (style.bold) overlay.style.fontWeight = 'bold';
                     if (style.italic) overlay.style.fontStyle = 'italic';
-                    if (style.yOffset) overlay.style.top = (scaledY + (style.yOffset * currentScale)) + 'px';
+                    if (style.yOffset) overlay.style.top = (scaledY - (style.yOffset * currentScale)) + 'px';
                     if (style.xOffset) overlay.style.left = (scaledX + (style.xOffset * currentScale)) + 'px';
                     if (!meta.isMultiline && style.align === 'center') {
                         overlay.style.display = 'flex';
