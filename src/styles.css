@@ -1,40 +1,221 @@
-/* D&D PDF Editor - Enhanced Styles */
+/* D&D PDF Editor - Material Design 3 Theme */
+/* M3 Design Tokens with preserved component structure */
+
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap");
 
-/* CSS Variables for theming */
+/* ========================================
+   Material Design 3 - Design Tokens
+   ======================================== */
+
 :root {
-  --primary-500: #6366f1;
-  --primary-600: #4f46e5;
-  --primary-700: #4338ca;
-  --accent-500: #8b5cf6;
-  --surface-50: #f8fafc;
-  --surface-100: #f1f5f9;
-  --surface-200: #e2e8f0;
-  --surface-300: #cbd5e1;
-  --surface-600: #475569;
-  --surface-700: #334155;
-  --surface-800: #1e293b;
-  --surface-900: #0f172a;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* M3 Primary Tonal Palette (Indigo-based to match existing branding) */
+  --md-sys-color-primary: #5c6bc0;
+  --md-sys-color-on-primary: #ffffff;
+  --md-sys-color-primary-container: #e8eaf6;
+  --md-sys-color-on-primary-container: #1a237e;
+
+  /* M3 Secondary Tonal Palette */
+  --md-sys-color-secondary: #7e57c2;
+  --md-sys-color-on-secondary: #ffffff;
+  --md-sys-color-secondary-container: #ede7f6;
+  --md-sys-color-on-secondary-container: #4a148c;
+
+  /* M3 Tertiary Tonal Palette */
+  --md-sys-color-tertiary: #26a69a;
+  --md-sys-color-on-tertiary: #ffffff;
+  --md-sys-color-tertiary-container: #e0f2f1;
+  --md-sys-color-on-tertiary-container: #004d40;
+
+  /* M3 Error Colors */
+  --md-sys-color-error: #b3261e;
+  --md-sys-color-on-error: #ffffff;
+  --md-sys-color-error-container: #f9dedc;
+  --md-sys-color-on-error-container: #410e0b;
+
+  /* M3 Surface Colors - Light Theme */
+  --md-sys-color-surface: #fef7ff;
+  --md-sys-color-on-surface: #1d1b20;
+  --md-sys-color-surface-variant: #e7e0ec;
+  --md-sys-color-on-surface-variant: #49454f;
+  --md-sys-color-surface-container-lowest: #ffffff;
+  --md-sys-color-surface-container-low: #f7f2fa;
+  --md-sys-color-surface-container: #f3edf7;
+  --md-sys-color-surface-container-high: #ece6f0;
+  --md-sys-color-surface-container-highest: #e6e0e9;
+
+  /* M3 Outline Colors */
+  --md-sys-color-outline: #79747e;
+  --md-sys-color-outline-variant: #cac4d0;
+
+  /* M3 Inverse Colors */
+  --md-sys-color-inverse-surface: #322f35;
+  --md-sys-color-inverse-on-surface: #f5eff7;
+  --md-sys-color-inverse-primary: #cfbcff;
+
+  /* M3 Background */
+  --md-sys-color-background: #fef7ff;
+  --md-sys-color-on-background: #1d1b20;
+
+  /* M3 Scrim */
+  --md-sys-color-scrim: #000000;
+
+  /* M3 Shadow */
+  --md-sys-color-shadow: #000000;
+
+  /* ========================================
+     Legacy Variable Mapping (Backwards Compatibility)
+     ======================================== */
+  --primary-500: var(--md-sys-color-primary);
+  --primary-600: #5161b8;
+  --primary-700: #4757af;
+  --accent-500: var(--md-sys-color-secondary);
+  --surface-50: var(--md-sys-color-surface-container-lowest);
+  --surface-100: var(--md-sys-color-surface-container-low);
+  --surface-200: var(--md-sys-color-surface-container);
+  --surface-300: var(--md-sys-color-surface-container-high);
+  --surface-600: var(--md-sys-color-on-surface-variant);
+  --surface-700: var(--md-sys-color-on-surface);
+  --surface-800: #2d2a32;
+  --surface-900: #1d1b20;
+
+  /* M3 Elevation (using tonal elevation) */
+  --md-sys-elevation-level0: 0px 0px 0px 0px rgba(0, 0, 0, 0);
+  --md-sys-elevation-level1: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
+  --md-sys-elevation-level2: 0px 2px 6px 2px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
+  --md-sys-elevation-level3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px 0px rgba(0, 0, 0, 0.30);
+  --md-sys-elevation-level4: 0px 6px 10px 4px rgba(0, 0, 0, 0.15), 0px 2px 3px 0px rgba(0, 0, 0, 0.30);
+  --md-sys-elevation-level5: 0px 8px 12px 6px rgba(0, 0, 0, 0.15), 0px 4px 4px 0px rgba(0, 0, 0, 0.30);
+
+  /* Legacy shadow mapping */
+  --shadow-sm: var(--md-sys-elevation-level1);
+  --shadow-md: var(--md-sys-elevation-level2);
+  --shadow-lg: var(--md-sys-elevation-level3);
+  --shadow-xl: var(--md-sys-elevation-level4);
+
+  /* M3 State Layer Opacities */
+  --md-sys-state-hover-opacity: 0.08;
+  --md-sys-state-focus-opacity: 0.12;
+  --md-sys-state-pressed-opacity: 0.12;
+  --md-sys-state-dragged-opacity: 0.16;
+
+  /* M3 Motion (Easing & Duration) */
+  --md-sys-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --md-sys-motion-easing-standard-decelerate: cubic-bezier(0, 0, 0, 1);
+  --md-sys-motion-easing-standard-accelerate: cubic-bezier(0.3, 0, 1, 1);
+  --md-sys-motion-easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --md-sys-motion-easing-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --md-sys-motion-easing-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+  
+  --md-sys-motion-duration-short1: 50ms;
+  --md-sys-motion-duration-short2: 100ms;
+  --md-sys-motion-duration-short3: 150ms;
+  --md-sys-motion-duration-short4: 200ms;
+  --md-sys-motion-duration-medium1: 250ms;
+  --md-sys-motion-duration-medium2: 300ms;
+  --md-sys-motion-duration-medium3: 350ms;
+  --md-sys-motion-duration-medium4: 400ms;
+  --md-sys-motion-duration-long1: 450ms;
+  --md-sys-motion-duration-long2: 500ms;
+
+  /* Legacy transition mapping */
+  --transition-fast: var(--md-sys-motion-duration-short3) var(--md-sys-motion-easing-standard);
+  --transition-normal: var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-standard);
+  --transition-slow: var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized);
+
+  /* M3 Shape (Corner Radius) */
+  --md-sys-shape-corner-none: 0px;
+  --md-sys-shape-corner-extra-small: 4px;
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-extra-large: 28px;
+  --md-sys-shape-corner-full: 9999px;
+
+  /* M3 Typography Scale */
+  --md-sys-typescale-display-large: 400 57px/64px 'Inter', sans-serif;
+  --md-sys-typescale-display-medium: 400 45px/52px 'Inter', sans-serif;
+  --md-sys-typescale-display-small: 400 36px/44px 'Inter', sans-serif;
+  --md-sys-typescale-headline-large: 400 32px/40px 'Inter', sans-serif;
+  --md-sys-typescale-headline-medium: 400 28px/36px 'Inter', sans-serif;
+  --md-sys-typescale-headline-small: 400 24px/32px 'Inter', sans-serif;
+  --md-sys-typescale-title-large: 400 22px/28px 'Inter', sans-serif;
+  --md-sys-typescale-title-medium: 500 16px/24px 'Inter', sans-serif;
+  --md-sys-typescale-title-small: 500 14px/20px 'Inter', sans-serif;
+  --md-sys-typescale-label-large: 500 14px/20px 'Inter', sans-serif;
+  --md-sys-typescale-label-medium: 500 12px/16px 'Inter', sans-serif;
+  --md-sys-typescale-label-small: 500 11px/16px 'Inter', sans-serif;
+  --md-sys-typescale-body-large: 400 16px/24px 'Inter', sans-serif;
+  --md-sys-typescale-body-medium: 400 14px/20px 'Inter', sans-serif;
+  --md-sys-typescale-body-small: 400 12px/16px 'Inter', sans-serif;
 }
 
+/* ========================================
+   M3 Dark Theme Colors
+   ======================================== */
 .dark {
-  --surface-50: #1e293b;
-  --surface-100: #1e293b;
-  --surface-200: #334155;
-  --surface-300: #475569;
-  --surface-600: #94a3b8;
-  --surface-700: #cbd5e1;
-  --surface-800: #e2e8f0;
-  --surface-900: #f8fafc;
+  /* M3 Primary Tonal Palette - Dark */
+  --md-sys-color-primary: #cfbcff;
+  --md-sys-color-on-primary: #381e72;
+  --md-sys-color-primary-container: #4f378b;
+  --md-sys-color-on-primary-container: #eaddff;
+
+  /* M3 Secondary Tonal Palette - Dark */
+  --md-sys-color-secondary: #ccc2dc;
+  --md-sys-color-on-secondary: #332d41;
+  --md-sys-color-secondary-container: #4a4458;
+  --md-sys-color-on-secondary-container: #e8def8;
+
+  /* M3 Tertiary Tonal Palette - Dark */
+  --md-sys-color-tertiary: #80cbc4;
+  --md-sys-color-on-tertiary: #00352f;
+  --md-sys-color-tertiary-container: #004d47;
+  --md-sys-color-on-tertiary-container: #b2dfdb;
+
+  /* M3 Error Colors - Dark */
+  --md-sys-color-error: #f2b8b5;
+  --md-sys-color-on-error: #601410;
+  --md-sys-color-error-container: #8c1d18;
+  --md-sys-color-on-error-container: #f9dedc;
+
+  /* M3 Surface Colors - Dark Theme */
+  --md-sys-color-surface: #141218;
+  --md-sys-color-on-surface: #e6e0e9;
+  --md-sys-color-surface-variant: #49454f;
+  --md-sys-color-on-surface-variant: #cac4d0;
+  --md-sys-color-surface-container-lowest: #0f0d13;
+  --md-sys-color-surface-container-low: #1d1b20;
+  --md-sys-color-surface-container: #211f26;
+  --md-sys-color-surface-container-high: #2b2930;
+  --md-sys-color-surface-container-highest: #36343b;
+
+  /* M3 Outline Colors - Dark */
+  --md-sys-color-outline: #938f99;
+  --md-sys-color-outline-variant: #49454f;
+
+  /* M3 Inverse Colors - Dark */
+  --md-sys-color-inverse-surface: #e6e0e9;
+  --md-sys-color-inverse-on-surface: #322f35;
+  --md-sys-color-inverse-primary: #6750a4;
+
+  /* M3 Background - Dark */
+  --md-sys-color-background: #141218;
+  --md-sys-color-on-background: #e6e0e9;
+
+  /* Legacy variable updates for dark mode */
+  --surface-50: var(--md-sys-color-surface-container-low);
+  --surface-100: var(--md-sys-color-surface-container-low);
+  --surface-200: var(--md-sys-color-surface-container);
+  --surface-300: var(--md-sys-color-surface-container-high);
+  --surface-600: var(--md-sys-color-on-surface-variant);
+  --surface-700: var(--md-sys-color-on-surface);
+  --surface-800: var(--md-sys-color-on-surface);
+  --surface-900: #ffffff;
 }
+
+/* ========================================
+   Base Styles
+   ======================================== */
 
 * {
   box-sizing: border-box;
@@ -44,7 +225,10 @@ body {
   font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Scrollbar styling */
+/* ========================================
+   Scrollbar Styling (M3-inspired)
+   ======================================== */
+
 .pdf-container::-webkit-scrollbar,
 aside::-webkit-scrollbar {
   width: 10px;
@@ -53,36 +237,39 @@ aside::-webkit-scrollbar {
 
 .pdf-container::-webkit-scrollbar-track,
 aside::-webkit-scrollbar-track {
-  background: var(--surface-100);
-  border-radius: 5px;
+  background: var(--md-sys-color-surface-container);
+  border-radius: var(--md-sys-shape-corner-full);
 }
 
 .pdf-container::-webkit-scrollbar-thumb,
 aside::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--primary-500), var(--accent-500));
-  border-radius: 5px;
-  border: 2px solid var(--surface-100);
+  background: linear-gradient(180deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
+  border-radius: var(--md-sys-shape-corner-full);
+  border: 2px solid var(--md-sys-color-surface-container);
 }
 
 .pdf-container::-webkit-scrollbar-thumb:hover,
 aside::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, var(--primary-600), var(--accent-500));
+  background: linear-gradient(180deg, var(--primary-600), var(--md-sys-color-secondary));
 }
 
 .pdf-container::-webkit-scrollbar-corner {
-  background: var(--surface-100);
+  background: var(--md-sys-color-surface-container);
 }
 
 .dark .pdf-container::-webkit-scrollbar-track,
 .dark aside::-webkit-scrollbar-track {
-  background: var(--surface-800);
+  background: var(--md-sys-color-surface-container);
 }
 
 .dark .pdf-container::-webkit-scrollbar-thumb {
-  border-color: var(--surface-800);
+  border-color: var(--md-sys-color-surface-container);
 }
 
-/* CodeMirror enhancements */
+/* ========================================
+   CodeMirror Enhancements
+   ======================================== */
+
 .CodeMirror {
   height: 100% !important;
   font-family: "JetBrains Mono", monospace;
@@ -96,30 +283,39 @@ aside::-webkit-scrollbar-thumb:hover {
   border-right: 1px solid #2d2f3d;
 }
 
-/* Page wrapper with enhanced shadow */
+/* ========================================
+   Page Wrapper (M3 Elevation)
+   ======================================== */
+
 .page-wrapper {
   position: relative;
   display: block;
   margin-bottom: 24px;
-  border-radius: 4px;
+  border-radius: var(--md-sys-shape-corner-medium);
   overflow: hidden;
-  box-shadow: var(--shadow-xl);
+  box-shadow: var(--md-sys-elevation-level3);
   transition: box-shadow var(--transition-normal);
   flex-shrink: 0;
 }
 
 .page-wrapper:hover {
-  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  box-shadow: var(--md-sys-elevation-level5);
 }
 
-/* Page image styling */
+/* ========================================
+   Page Image Styling
+   ======================================== */
+
 .page-image {
   display: block;
   user-select: none;
   -webkit-user-drag: none;
 }
 
-/* Field overlay inputs */
+/* ========================================
+   Field Overlay Inputs (M3 Focus States)
+   ======================================== */
+
 .field-overlay {
   position: absolute;
   background: transparent;
@@ -149,9 +345,9 @@ aside::-webkit-scrollbar-thumb:hover {
 }
 
 .field-overlay:focus {
-  background: rgba(99, 102, 241, 0.12);
-  box-shadow: inset 0 0 0 2px rgba(99, 102, 241, 0.5);
-  border-radius: 2px;
+  background: rgba(92, 107, 192, 0.12);
+  box-shadow: inset 0 0 0 2px rgba(92, 107, 192, 0.5);
+  border-radius: var(--md-sys-shape-corner-extra-small);
 }
 
 .field-overlay.checkbox-overlay {
@@ -159,12 +355,12 @@ aside::-webkit-scrollbar-thumb:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 2px;
+  border-radius: var(--md-sys-shape-corner-extra-small);
   transition: background var(--transition-fast);
 }
 
 .field-overlay.checkbox-overlay:hover {
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(92, 107, 192, 0.08);
 }
 
 .field-overlay.checkbox-overlay::after {
@@ -178,7 +374,10 @@ aside::-webkit-scrollbar-thumb:hover {
   color: #000;
 }
 
-/* Editable text field overlays */
+/* ========================================
+   Editable Text Field Overlays
+   ======================================== */
+
 .field-overlay.editable {
   cursor: text;
   -webkit-user-select: text;
@@ -192,16 +391,21 @@ aside::-webkit-scrollbar-thumb:hover {
   font-size: 0.85em;
 }
 
-/* Image upload boxes */
+/* ========================================
+   Image Upload Boxes (M3 Container Styling)
+   ======================================== */
+
 .image-upload-box {
   position: absolute;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.95));
-  border: 2px dashed rgba(99, 102, 241, 0.3);
-  border-radius: 8px;
+  background: linear-gradient(135deg, 
+    var(--md-sys-color-surface-container-lowest), 
+    var(--md-sys-color-surface-container-low));
+  border: 2px dashed var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-medium);
   cursor: pointer;
   transition: all var(--transition-normal);
   box-sizing: border-box;
@@ -209,10 +413,12 @@ aside::-webkit-scrollbar-thumb:hover {
 }
 
 .image-upload-box:hover {
-  border-color: var(--primary-500);
-  background: linear-gradient(135deg, rgba(238, 242, 255, 0.98), rgba(224, 231, 255, 0.98));
+  border-color: var(--md-sys-color-primary);
+  background: linear-gradient(135deg, 
+    var(--md-sys-color-primary-container), 
+    var(--md-sys-color-surface-container));
   transform: scale(1.02);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--md-sys-elevation-level2);
 }
 
 .image-upload-box .upload-icon {
@@ -228,14 +434,14 @@ aside::-webkit-scrollbar-thumb:hover {
 
 .image-upload-box .upload-text {
   font-size: 11px;
-  color: var(--surface-600);
+  color: var(--md-sys-color-on-surface-variant);
   font-weight: 600;
   text-align: center;
 }
 
 .image-upload-box .size-hint {
   font-size: 9px;
-  color: var(--surface-300);
+  color: var(--md-sys-color-outline);
   margin-top: 2px;
   text-align: center;
 }
@@ -253,10 +459,13 @@ aside::-webkit-scrollbar-thumb:hover {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: var(--md-sys-shape-corner-small);
 }
 
-/* Debug mode styles */
+/* ========================================
+   Debug Mode Styles
+   ======================================== */
+
 .debug-box {
   position: absolute;
   border: 2px solid rgba(239, 68, 68, 0.7);
@@ -266,7 +475,7 @@ aside::-webkit-scrollbar-thumb:hover {
   font-size: 8px;
   color: #ef4444;
   overflow: visible;
-  border-radius: 2px;
+  border-radius: var(--md-sys-shape-corner-extra-small);
 }
 
 .debug-box.checkbox {
@@ -283,35 +492,45 @@ aside::-webkit-scrollbar-thumb:hover {
   white-space: nowrap;
   background: rgba(255, 255, 255, 0.95);
   padding: 1px 4px;
-  border-radius: 2px;
+  border-radius: var(--md-sys-shape-corner-extra-small);
   font-weight: 600;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--md-sys-elevation-level1);
 }
 
-/* Toggle checkbox */
+/* ========================================
+   Toggle Checkbox
+   ======================================== */
+
 .toggle-checkbox:checked {
   right: 0;
-  border-color: #ef4444;
+  border-color: var(--md-sys-color-error);
 }
 
 .toggle-checkbox:checked + .toggle-label {
-  background-color: #ef4444;
+  background-color: var(--md-sys-color-error);
 }
 
-/* Formatting Toolbar */
+/* ========================================
+   Formatting Toolbar (M3 Surface Tint)
+   ======================================== */
+
 .formatting-toolbar {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 10px 16px;
-  border-top: 1px solid var(--surface-200);
-  background: linear-gradient(180deg, var(--surface-50), var(--surface-100));
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  background: linear-gradient(180deg, 
+    var(--md-sys-color-surface-container-lowest), 
+    var(--md-sys-color-surface-container-low));
   width: 100%;
 }
 
 .dark .formatting-toolbar {
-  background: linear-gradient(180deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.9));
-  border-top-color: var(--surface-700);
+  background: linear-gradient(180deg, 
+    var(--md-sys-color-surface-container-low), 
+    var(--md-sys-color-surface-container));
+  border-top-color: var(--md-sys-color-outline-variant);
 }
 
 .toolbar-group {
@@ -319,82 +538,110 @@ aside::-webkit-scrollbar-thumb:hover {
   align-items: center;
   gap: 4px;
   padding-right: 12px;
-  border-right: 1px solid var(--surface-200);
+  border-right: 1px solid var(--md-sys-color-outline-variant);
 }
 
 .dark .toolbar-group {
-  border-right-color: var(--surface-700);
+  border-right-color: var(--md-sys-color-outline-variant);
 }
 
 .toolbar-group:last-child {
   border-right: none;
 }
 
+/* ========================================
+   Toolbar Buttons (M3 Filled Tonal Style)
+   ======================================== */
+
 .toolbar-btn {
   padding: 6px 10px;
-  border-radius: 6px;
+  border-radius: var(--md-sys-shape-corner-small);
   border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
   font-size: 14px;
-  color: var(--surface-600);
+  color: var(--md-sys-color-on-surface-variant);
   display: flex;
   align-items: center;
   justify-content: center;
   min-width: 32px;
   transition: all var(--transition-fast);
+  position: relative;
+}
+
+.toolbar-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.toolbar-btn:hover::before {
+  opacity: var(--md-sys-state-hover-opacity);
 }
 
 .toolbar-btn:hover {
-  background: var(--surface-100);
-  color: var(--surface-800);
+  color: var(--md-sys-color-on-surface);
   transform: translateY(-1px);
 }
 
 .toolbar-btn.active {
-  background: linear-gradient(135deg, var(--primary-500), var(--accent-500));
-  color: white;
+  background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
+  color: var(--md-sys-color-on-primary);
   border-color: transparent;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--md-sys-elevation-level1);
+}
+
+.toolbar-btn.active::before {
+  display: none;
 }
 
 .dark .toolbar-btn {
-  color: var(--surface-300);
+  color: var(--md-sys-color-on-surface-variant);
 }
 
 .dark .toolbar-btn:hover {
-  background: var(--surface-700);
-  color: white;
+  color: var(--md-sys-color-on-surface);
 }
+
+/* ========================================
+   Toolbar Select (M3 Outlined Style)
+   ======================================== */
 
 .toolbar-select {
   padding: 4px 8px;
-  border-radius: 6px;
-  border: 1px solid var(--surface-200);
+  border-radius: var(--md-sys-shape-corner-small);
+  border: 1px solid var(--md-sys-color-outline);
   font-size: 12px;
-  color: var(--surface-700);
-  background: white;
+  color: var(--md-sys-color-on-surface);
+  background: var(--md-sys-color-surface-container-lowest);
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
 .toolbar-select:hover {
-  border-color: var(--primary-500);
+  border-color: var(--md-sys-color-primary);
 }
 
 .toolbar-select:focus {
   outline: none;
-  border-color: var(--primary-500);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0 0 0 3px rgba(92, 107, 192, 0.15);
 }
 
 .dark .toolbar-select {
-  background: var(--surface-800);
-  border-color: var(--surface-600);
-  color: var(--surface-200);
+  background: var(--md-sys-color-surface-container);
+  border-color: var(--md-sys-color-outline);
+  color: var(--md-sys-color-on-surface);
 }
 
-/* Screen reader only utility class */
+/* ========================================
+   Screen Reader Only Utility
+   ======================================== */
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -407,36 +654,53 @@ aside::-webkit-scrollbar-thumb:hover {
   border: 0;
 }
 
-/* Enhanced button styles */
+/* ========================================
+   Enhanced Button Focus States (M3)
+   ======================================== */
+
 button:focus-visible {
-  outline: 2px solid var(--primary-500);
+  outline: 2px solid var(--md-sys-color-primary);
   outline-offset: 2px;
 }
 
-/* Sidebar enhancements */
+/* ========================================
+   Sidebar Enhancements (M3 Navigation Rail)
+   ======================================== */
+
 #sidebar-panel {
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--md-sys-elevation-level2);
 }
 
 #sidebar-panel nav {
   scrollbar-width: thin;
-  scrollbar-color: var(--primary-500) var(--surface-100);
+  scrollbar-color: var(--md-sys-color-primary) var(--md-sys-color-surface-container);
 }
 
-/* Panel transitions */
+/* ========================================
+   Panel Transitions
+   ======================================== */
+
 #sidebar-panel,
 #json-panel,
 #formatting-toolbar {
   transition: all var(--transition-slow);
 }
 
-/* Toast notification */
+/* ========================================
+   Toast Notification (M3 Snackbar Style)
+   ======================================== */
+
 #render-toast {
   backdrop-filter: blur(8px);
-  background: rgba(15, 23, 42, 0.9) !important;
+  background: var(--md-sys-color-inverse-surface) !important;
+  color: var(--md-sys-color-inverse-on-surface);
+  border-radius: var(--md-sys-shape-corner-small);
 }
 
-/* Responsive Design */
+/* ========================================
+   Responsive Design
+   ======================================== */
+
 @media (max-width: 1024px) {
   #sidebar-panel {
     width: 200px !important;
@@ -470,7 +734,7 @@ button:focus-visible {
   
   #sidebar-panel.open {
     transform: translateX(0);
-    box-shadow: var(--shadow-xl);
+    box-shadow: var(--md-sys-elevation-level5);
   }
   
   #json-panel {
@@ -506,22 +770,40 @@ button:focus-visible {
   }
 }
 
-/* Loading animation for page caching */
+/* ========================================
+   Animations
+   ======================================== */
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
 
 .loading {
-  animation: pulse 1.5s ease-in-out infinite;
+  animation: pulse 1.5s var(--md-sys-motion-easing-standard) infinite;
 }
 
-/* Glassmorphism effect for header */
+/* M3 Ripple Effect (optional enhancement) */
+@keyframes md-ripple {
+  from {
+    transform: scale(0);
+    opacity: 0.4;
+  }
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* ========================================
+   Glassmorphism Header (M3 Surface Tint)
+   ======================================== */
+
 header {
   backdrop-filter: blur(12px);
-  background: rgba(255, 255, 255, 0.85) !important;
+  background: rgba(254, 247, 255, 0.85) !important;
 }
 
 .dark header {
-  background: rgba(30, 41, 59, 0.85) !important;
+  background: rgba(29, 27, 32, 0.85) !important;
 }

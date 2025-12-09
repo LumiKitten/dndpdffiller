@@ -1384,6 +1384,9 @@ let originalPdfBytes = null;
         var exportBtn = document.querySelector('[data-action="export-json"]');
         if (exportBtn) exportBtn.addEventListener('click', exportJSON);
         
+        var importBtn = document.querySelector('[data-action="import-json"]');
+        if (importBtn) importBtn.addEventListener('click', importJSON);
+        
         var resetBtn = document.querySelector('[data-action="reset-json"]');
         if (resetBtn) resetBtn.addEventListener('click', loadSampleData);
     });
