@@ -306,6 +306,27 @@
             </nav>
         </aside>
 
+        <section class="flex-grow bg-gray-200 flex flex-col h-full overflow-hidden relative dark:bg-gray-900"
+            role="region" aria-label="PDF preview and editing area">
+            <div id="render-toast" role="status" aria-live="polite" aria-atomic="true"
+                class="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-gray-900 text-white text-xs px-4 py-2 rounded-lg opacity-0 transition-opacity duration-300 pointer-events-none shadow-lg font-medium min-w-[150px]">
+                <div class="flex justify-between items-center mb-1"><span
+                        id="render-status-text">Rendering...</span><span id="render-percent">0%</span></div>
+                <div class="w-full bg-gray-700 h-1 rounded-full overflow-hidden" role="progressbar" aria-valuenow="0"
+                    aria-valuemin="0" aria-valuemax="100" aria-label="PDF rendering progress">
+                    <div id="render-progress-bar" class="bg-blue-500 h-full w-0 transition-all duration-200 ease-out">
+                    </div>
+                </div>
+            </div>
+            <div id="pdf-container" class="pdf-container flex-grow overflow-auto p-8 flex flex-col items-center"
+                role="document" aria-label="PDF pages with editable form field overlays" tabindex="0">
+                <div id="empty-state" class="text-center mt-32 text-gray-400 select-none w-full" aria-live="polite">
+                    <p class="font-medium text-sm">No PDF Loaded</p>
+                    <p class="text-xs mt-1">Upload a PDF or click "Load Sample D&D Sheet"</p>
+                </div>
+            </div>
+        </section>
+
         <section id="json-panel" role="region" aria-label="JSON data editor for PDF form values"
             class="w-96 bg-gray-900 border-r border-gray-700 flex flex-col flex-shrink-0 transition-all duration-300 ease-in-out dark:border-gray-600">
             <div
@@ -327,27 +348,6 @@
             </div>
             <div class="flex-grow relative overflow-hidden" id="editor-container">
                 <textarea id="json-input" aria-label="JSON data editor for PDF form values"></textarea>
-            </div>
-        </section>
-
-        <section class="flex-grow bg-gray-200 flex flex-col h-full overflow-hidden relative dark:bg-gray-900"
-            role="region" aria-label="PDF preview and editing area">
-            <div id="render-toast" role="status" aria-live="polite" aria-atomic="true"
-                class="absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-gray-900 text-white text-xs px-4 py-2 rounded-lg opacity-0 transition-opacity duration-300 pointer-events-none shadow-lg font-medium min-w-[150px]">
-                <div class="flex justify-between items-center mb-1"><span
-                        id="render-status-text">Rendering...</span><span id="render-percent">0%</span></div>
-                <div class="w-full bg-gray-700 h-1 rounded-full overflow-hidden" role="progressbar" aria-valuenow="0"
-                    aria-valuemin="0" aria-valuemax="100" aria-label="PDF rendering progress">
-                    <div id="render-progress-bar" class="bg-blue-500 h-full w-0 transition-all duration-200 ease-out">
-                    </div>
-                </div>
-            </div>
-            <div id="pdf-container" class="pdf-container flex-grow overflow-auto p-8 flex flex-col items-center"
-                role="document" aria-label="PDF pages with editable form field overlays" tabindex="0">
-                <div id="empty-state" class="text-center mt-32 text-gray-400 select-none w-full" aria-live="polite">
-                    <p class="font-medium text-sm">No PDF Loaded</p>
-                    <p class="text-xs mt-1">Upload a PDF or click "Load Sample D&D Sheet"</p>
-                </div>
             </div>
         </section>
     </main>
