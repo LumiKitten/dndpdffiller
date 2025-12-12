@@ -95,64 +95,84 @@
                 </div>
             </div>
             <!-- Removed duplicate zoom controls -->
-            <!-- Updated Controls -->
+            <!-- Updated Controls - Consolidated Toolbar -->
             <nav role="toolbar" aria-label="PDF controls and view options"
-                class="flex items-center gap-4 bg-gray-50 p-1.5 rounded-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600">
-                <div class="flex items-center gap-2 border-r border-gray-300 pr-3 mr-1 dark:border-gray-500"
-                    role="group" aria-label="Zoom controls">
-                    <label for="zoom-slider" class="text-xs text-gray-500 font-medium dark:text-gray-300">Zoom:</label>
+                class="flex items-center gap-2 bg-gray-50 p-1.5 rounded-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600">
+                
+                <!-- Zoom Controls -->
+                <div class="flex items-center gap-2" role="group" aria-label="Zoom controls">
                     <input type="range" id="zoom-slider" min="10" max="300" value="100"
-                        class="w-24 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-600"
+                        class="w-20 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-600"
                         oninput="updateZoomLabel(this.value)" onchange="applyZoom(this.value)"
                         aria-valuemin="10" aria-valuemax="300" aria-valuenow="100" aria-label="PDF zoom level">
                     <output id="zoom-level" for="zoom-slider"
-                        class="text-xs font-mono w-12 text-center text-gray-600 dark:text-gray-200">100%</output>
+                        class="text-xs font-mono w-10 text-center text-gray-600 dark:text-gray-200">100%</output>
                     <button id="btn-autofit" onclick="toggleAutoFit()"
-                        class="ml-1 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded border border-blue-200 font-medium dark:bg-blue-900 dark:text-blue-200 dark:border-blue-800"
-                        aria-label="Fit PDF to window width" data-action="auto-fit-toggle">Fit</button>
+                        class="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded border border-blue-200 font-medium dark:bg-blue-900 dark:text-blue-200 dark:border-blue-800"
+                        aria-label="Fit PDF to window width" data-tooltip="Fit to width">Fit</button>
                 </div>
+
+                <div class="toolbar-divider"></div>
 
                 <!-- Dark Mode Toggle -->
-                <div class="flex items-center gap-2 border-r border-gray-300 pr-3 mr-1 dark:border-gray-500"
-                    role="group" aria-label="Theme toggle">
-                    <button onclick="toggleDarkMode()"
-                        class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300"
-                        aria-label="Toggle dark mode" aria-pressed="false" id="dark-mode-btn"
-                        data-action="toggle-dark-mode">
-                        <span id="dark-mode-icon" aria-hidden="true">🌙</span>
-                        <span class="sr-only">Toggle dark mode</span>
+                <button id="dark-mode-btn" onclick="toggleDarkMode()"
+                    class="btn-icon" aria-label="Toggle dark mode" aria-pressed="false"
+                    data-tooltip="Toggle theme" data-action="toggle-dark-mode">
+                    <span id="dark-mode-icon" aria-hidden="true">🌙</span>
+                </button>
+
+                <!-- View Dropdown -->
+                <div class="dropdown-container" id="view-dropdown">
+                    <button class="dropdown-trigger" aria-haspopup="true">
+                        <span>View</span>
+                        <span class="chevron">▼</span>
                     </button>
+                    <div class="dropdown-menu" role="menu">
+                        <button class="dropdown-item active" id="menu-toggle-sidebar" role="menuitem">
+                            <span class="icon">📋</span>
+                            <span>Field List</span>
+                            <span class="check">✓</span>
+                        </button>
+                        <button class="dropdown-item active" id="menu-toggle-toolbar" role="menuitem">
+                            <span class="icon">🎨</span>
+                            <span>Format Bar</span>
+                            <span class="check">✓</span>
+                        </button>
+                        <button class="dropdown-item active" id="menu-toggle-json" role="menuitem">
+                            <span class="icon">{ }</span>
+                            <span>JSON Editor</span>
+                            <span class="check">✓</span>
+                        </button>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item" id="menu-toggle-debug" role="menuitem">
+                            <span class="icon">🔍</span>
+                            <span>Debug Mode</span>
+                            <span class="check">✓</span>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- View Toggles -->
-                <div class="flex items-center gap-2 border-r border-gray-300 pr-3 mr-1 dark:border-gray-500"
-                    role="group" aria-label="Panel visibility toggles">
-                    <button onclick="togglePanel('sidebar')" id="btn-toggle-sidebar"
-                        class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-blue-600 font-medium text-xs"
-                        aria-label="Toggle field list sidebar" aria-expanded="true" aria-controls="sidebar-panel"
-                        data-action="toggle-sidebar">Runes</button>
-                    <button onclick="togglePanel('toolbar')" id="btn-toggle-toolbar"
-                        class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-blue-600 font-medium text-xs"
-                        aria-label="Toggle formatting toolbar" aria-expanded="true" aria-controls="formatting-toolbar"
-                        data-action="toggle-toolbar">Format</button>
-                    <button onclick="togglePanel('json')" id="btn-toggle-json"
-                        class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-blue-600 font-medium text-xs"
-                        aria-label="Toggle JSON editor panel" aria-expanded="true" aria-controls="json-panel"
-                        data-action="toggle-json">JSON</button>
-                </div>
+                <div class="toolbar-divider"></div>
 
-                <button id="debug-toggle-btn" onclick="toggleDebug()"
-                    class="text-xs font-semibold uppercase tracking-wider px-2 py-1 rounded transition-colors duration-200 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200"
-                    aria-label="Toggle debug mode to show field boundaries" aria-pressed="false"
-                    data-action="toggle-debug">Debug</button>
+                <!-- Export Buttons -->
                 <button id="download-btn" onclick="downloadPDF()"
-                    class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium opacity-50 cursor-not-allowed shadow-sm"
-                    disabled aria-label="Download filled PDF" aria-disabled="true"
-                    data-action="download-pdf">Download</button>
+                    class="flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md hover:from-blue-700 hover:to-indigo-700 transition-all text-xs font-medium opacity-50 cursor-not-allowed shadow-sm"
+                    disabled aria-label="Download filled PDF (Ctrl+S)" aria-disabled="true"
+                    data-tooltip="Download PDF (Ctrl+S)" data-action="download-pdf">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    <span>Export</span>
+                </button>
                 <button id="verify-btn" onclick="verifyExport()"
-                    class="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium opacity-50 cursor-not-allowed shadow-sm ml-2"
+                    class="flex items-center gap-1 px-2 py-1.5 bg-gray-100 text-gray-600 rounded-md hover:bg-gray-200 transition-colors text-xs font-medium opacity-50 cursor-not-allowed border border-gray-200 dark:bg-gray-600 dark:text-gray-300 dark:border-gray-500"
                     disabled aria-label="Preview filled PDF in new tab" aria-disabled="true"
-                    data-action="verify-pdf">Verify Export</button>
+                    data-tooltip="Preview export" data-action="verify-pdf">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                    </svg>
+                </button>
             </nav>
         </div>
 
@@ -171,7 +191,7 @@
                 <label for="font--select" class="sr-only">Font Size</label>
                 <select id="font-size-select"
                     class="toolbar-select dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600"
-                    onchange="applyStyle('fontSize', this.value)" aria-label="Font size in points"
+                    aria-label="Font size in points"
                     data-field="font-size">
                     <option value="">Auto</option>
                     <option value="1">1</option>
@@ -211,12 +231,12 @@
 
             <div class="toolbar-group dark:border-gray-700" role="group" aria-label="Text style">
                 <button class="toolbar-btn dark:text-gray-300 dark:hover:bg-gray-700" id="btn-bold"
-                    onclick="toggleStyle('bold')" aria-label="Toggle bold text" aria-pressed="false"
+                    aria-label="Toggle bold text" aria-pressed="false"
                     data-action="toggle-bold">
                     <strong aria-hidden="true">B</strong>
                 </button>
                 <button class="toolbar-btn dark:text-gray-300 dark:hover:bg-gray-700" id="btn-italic"
-                    onclick="toggleStyle('italic')" aria-label="Toggle italic text" aria-pressed="false"
+                    aria-label="Toggle italic text" aria-pressed="false"
                     data-action="toggle-italic">
                     <em aria-hidden="true">I</em>
                 </button>
@@ -224,7 +244,7 @@
 
             <div class="toolbar-group dark:border-gray-700" role="radiogroup" aria-label="Text alignment">
                 <button class="toolbar-btn dark:text-gray-300 dark:hover:bg-gray-700" id="btn-align-left"
-                    onclick="applyStyle('align', 'left')" aria-label="Align text left" role="radio" aria-checked="true"
+                    aria-label="Align text left" role="radio" aria-checked="true"
                     data-action="align-left">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -232,7 +252,7 @@
                     </svg>
                 </button>
                 <button class="toolbar-btn dark:text-gray-300 dark:hover:bg-gray-700" id="btn-align-center"
-                    onclick="applyStyle('align', 'center')" aria-label="Align text center" role="radio"
+                    aria-label="Align text center" role="radio"
                     aria-checked="false" data-action="align-center">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -240,7 +260,7 @@
                     </svg>
                 </button>
                 <button class="toolbar-btn dark:text-gray-300 dark:hover:bg-gray-700" id="btn-align-right"
-                    onclick="applyStyle('align', 'right')" aria-label="Align text right" role="radio"
+                    aria-label="Align text right" role="radio"
                     aria-checked="false" data-action="align-right">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -252,7 +272,7 @@
             <div class="toolbar-group dark:border-gray-700" role="group" aria-label="Text color">
                 <label for="text-color-picker" class="sr-only">Text color</label>
                 <input type="color" id="text-color-picker" class="w-8 h-8 cursor-pointer border-0 p-0 bg-transparent"
-                    value="#000000" onchange="applyStyle('color', this.value)" aria-label="Select text color"
+                    value="#000000" aria-label="Select text color"
                     data-field="text-color">
             </div>
 

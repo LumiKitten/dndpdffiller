@@ -1,6 +1,108 @@
 ﻿(function() {
     'use strict';
 
+    // ==========================================
+    // Storage Manager - Persist user data across reloads
+    // ==========================================
+    const StorageManager = {
+        KEYS: {
+            JSON_DATA: 'dndpdf_jsonData',
+            IMAGES: 'dndpdf_images',
+            PANEL_STATES: 'dndpdf_panelStates',
+            ZOOM: 'dndpdf_zoom',
+            DARK_MODE: 'dndpdf_darkMode'
+        },
+
+        saveTimeout: null,
+
+        // Debounced save - waits 500ms after last call
+        scheduleSave(key, data) {
+            clearTimeout(this.saveTimeout);
+            this.saveTimeout = setTimeout(() => {
+                this.save(key, data);
+                this.showSaveToast();
+            }, 500);
+        },
+
+        save(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch (e) {
+                console.warn('Storage save failed:', e);
+            }
+        },
+
+        load(key, defaultValue = null) {
+            try {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : defaultValue;
+            } catch (e) {
+                console.warn('Storage load failed:', e);
+                return defaultValue;
+            }
+        },
+
+        saveJsonData(jsonString) {
+            this.scheduleSave(this.KEYS.JSON_DATA, jsonString);
+        },
+
+        loadJsonData() {
+            return this.load(this.KEYS.JSON_DATA, null);
+        },
+
+        saveImages(images) {
+            this.save(this.KEYS.IMAGES, images);
+            this.showSaveToast();
+        },
+
+        loadImages() {
+            return this.load(this.KEYS.IMAGES, {});
+        },
+
+        savePanelStates(states) {
+            this.save(this.KEYS.PANEL_STATES, states);
+        },
+
+        loadPanelStates() {
+            return this.load(this.KEYS.PANEL_STATES, { sidebar: true, toolbar: true, json: true });
+        },
+
+        saveZoom(zoom) {
+            this.save(this.KEYS.ZOOM, zoom);
+        },
+
+        loadZoom() {
+            return this.load(this.KEYS.ZOOM, { scale: 1.0, autoFit: true });
+        },
+
+        saveDarkMode(isDark) {
+            this.save(this.KEYS.DARK_MODE, isDark);
+        },
+
+        loadDarkMode() {
+            return this.load(this.KEYS.DARK_MODE, false);
+        },
+
+        clearAll() {
+            Object.values(this.KEYS).forEach(key => {
+                localStorage.removeItem(key);
+            });
+        },
+
+        showSaveToast() {
+            let toast = document.getElementById('save-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'save-toast';
+                toast.className = 'save-toast';
+                toast.textContent = '✓ Saved';
+                document.body.appendChild(toast);
+            }
+            toast.classList.add('visible');
+            setTimeout(() => toast.classList.remove('visible'), 1500);
+        }
+    };
+
 let originalPdfBytes = null;
         let pdfDoc = null;
         let currentScale = 1.0;
@@ -340,6 +442,19 @@ let originalPdfBytes = null;
 
         // Initialize CodeMirror
         document.addEventListener('DOMContentLoaded', function () {
+            // Restore dark mode preference
+            const savedDarkMode = StorageManager.loadDarkMode();
+            if (savedDarkMode) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('dark-mode-icon').textContent = '☀';
+                const btn = document.getElementById('dark-mode-btn');
+                if (btn) btn.setAttribute('aria-pressed', 'true');
+            }
+
+            // Load saved images
+            fieldImages = StorageManager.loadImages();
+
+            // Initialize CodeMirror JSON editor
             jsonEditor = CodeMirror.fromTextArea(document.getElementById('json-input'), {
                 mode: { name: "javascript", json: true },
                 theme: "dracula",
@@ -350,12 +465,130 @@ let originalPdfBytes = null;
                 tabSize: 4,
                 indentWithTabs: false
             });
-            jsonEditor.setValue(JSON.stringify(defaultData, null, 4));
-            jsonEditor.on('change', validateJson);
+
+            // Load saved JSON or default data
+            const savedJson = StorageManager.loadJsonData();
+            if (savedJson) {
+                jsonEditor.setValue(savedJson);
+            } else {
+                jsonEditor.setValue(JSON.stringify(defaultData, null, 4));
+            }
+
+            // Validate and auto-save on changes
+            jsonEditor.on('change', function() {
+                validateJson();
+                StorageManager.saveJsonData(jsonEditor.getValue());
+            });
             jsonEditor.on('blur', () => { if (originalPdfBytes) updatePreview(); });
             validateJson();
+
+            // Restore panel states
+            const panelStates = StorageManager.loadPanelStates();
+            if (!panelStates.sidebar) restorePanelHidden('sidebar');
+            if (!panelStates.toolbar) restorePanelHidden('toolbar');
+            if (!panelStates.json) restorePanelHidden('json');
+
+            // Restore zoom settings
+            const zoomSettings = StorageManager.loadZoom();
+            isAutoFit = zoomSettings.autoFit;
+            currentScale = zoomSettings.scale;
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', handleKeyboardShortcuts);
         });
 
+        function handleKeyboardShortcuts(e) {
+            // Ctrl/Cmd + S - Download PDF
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                if (!document.getElementById('download-btn').disabled) {
+                    downloadPDF();
+                }
+            }
+            // Ctrl/Cmd + Shift + S - Verify Export
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'S') {
+                e.preventDefault();
+                if (!document.getElementById('verify-btn').disabled) {
+                    verifyPDF();
+                }
+            }
+            // Escape - Close dropdowns, deselect field
+            if (e.key === 'Escape') {
+                closeAllDropdowns();
+                currentSelectedField = null;
+                updateToolbarUI();
+            }
+        }
+
+        function closeAllDropdowns() {
+            document.querySelectorAll('.dropdown-menu.open').forEach(menu => {
+                menu.classList.remove('open');
+            });
+        }
+
+        function restorePanelHidden(panelName) {
+            let el, menuItem;
+            if (panelName === 'sidebar') {
+                el = document.getElementById('sidebar-panel');
+                menuItem = document.getElementById('menu-toggle-sidebar');
+            } else if (panelName === 'json') {
+                el = document.getElementById('json-panel');
+                menuItem = document.getElementById('menu-toggle-json');
+            } else if (panelName === 'toolbar') {
+                el = document.getElementById('formatting-toolbar');
+                menuItem = document.getElementById('menu-toggle-toolbar');
+            }
+            if (el) el.style.display = 'none';
+            if (menuItem) menuItem.classList.remove('active');
+        }
+
+        // Dropdown menu functions
+        function closeAllDropdowns() {
+            document.querySelectorAll('.dropdown-container.open').forEach(function(dropdown) {
+                dropdown.classList.remove('open');
+            });
+        }
+
+        function toggleDropdown(dropdownId) {
+            const dropdown = document.getElementById(dropdownId);
+            const isOpen = dropdown.classList.contains('open');
+            
+            // Close all dropdowns first
+            closeAllDropdowns();
+            
+            // Toggle this one
+            if (!isOpen) {
+                dropdown.classList.add('open');
+            }
+        }
+
+        // Click outside to close dropdowns
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown-container')) {
+                closeAllDropdowns();
+            }
+        });
+
+        function togglePanelFromDropdown(panelName) {
+            togglePanel(panelName);
+            
+            // Update dropdown item active state
+            const menuItem = document.getElementById('menu-toggle-' + panelName);
+            const el = panelName === 'sidebar' ? document.getElementById('sidebar-panel') :
+                       panelName === 'json' ? document.getElementById('json-panel') :
+                       document.getElementById('formatting-toolbar');
+            
+            if (el && menuItem) {
+                const isVisible = el.style.display !== 'none';
+                menuItem.classList.toggle('active', isVisible);
+            }
+        }
+
+        function toggleDebugFromDropdown() {
+            toggleDebug();
+            const menuItem = document.getElementById('menu-toggle-debug');
+            if (menuItem) menuItem.classList.toggle('active', isDebugMode);
+        }
         function validateJson() {
             const statusEl = document.getElementById('json-status');
             try {
@@ -615,6 +848,7 @@ let originalPdfBytes = null;
             document.getElementById('btn-autofit').className = isAutoFit
                 ? 'ml-1 px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded border border-blue-200 font-medium'
                 : 'ml-1 px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded border border-gray-200 font-medium';
+            StorageManager.saveZoom({ scale: currentScale, autoFit: isAutoFit });
             updatePreview();
         }
 
@@ -626,19 +860,15 @@ let originalPdfBytes = null;
             isAutoFit = false;
             document.getElementById('btn-autofit').className = 'ml-1 px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded border border-gray-200 font-medium dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600';
             currentScale = parseInt(value) / 100;
+            StorageManager.saveZoom({ scale: currentScale, autoFit: isAutoFit });
             updatePreview();
         }
 
         function toggleDebug() {
             isDebugMode = !isDebugMode;
-            const btn = document.getElementById('debug-toggle-btn');
-            btn.setAttribute('aria-pressed', isDebugMode.toString());
-            if (isDebugMode) {
-                btn.classList.remove('text-gray-600', 'dark:text-gray-400');
-                btn.classList.add('text-red-500', 'dark:text-red-400');
-            } else {
-                btn.classList.remove('text-red-500', 'dark:text-red-400');
-                btn.classList.add('text-gray-600', 'dark:text-gray-400');
+            const menuItem = document.getElementById('menu-toggle-debug');
+            if (menuItem) {
+                menuItem.classList.toggle('active', isDebugMode);
             }
             updatePreview();
         }
@@ -649,21 +879,22 @@ let originalPdfBytes = null;
             document.getElementById('dark-mode-icon').textContent = isDark ? '☀' : '🌙';
             const btn = document.getElementById('dark-mode-btn');
             if (btn) btn.setAttribute('aria-pressed', isDark.toString());
+            StorageManager.saveDarkMode(isDark);
         }
 
         function togglePanel(panelName) {
             let el;
-            let btn;
+            let menuItem;
 
             if (panelName === 'sidebar') {
                 el = document.getElementById('sidebar-panel');
-                btn = document.getElementById('btn-toggle-sidebar');
+                menuItem = document.getElementById('menu-toggle-sidebar');
             } else if (panelName === 'json') {
                 el = document.getElementById('json-panel');
-                btn = document.getElementById('btn-toggle-json');
+                menuItem = document.getElementById('menu-toggle-json');
             } else if (panelName === 'toolbar') {
                 el = document.getElementById('formatting-toolbar');
-                btn = document.getElementById('btn-toggle-toolbar');
+                menuItem = document.getElementById('menu-toggle-toolbar');
             }
 
             if (!el) return;
@@ -672,20 +903,17 @@ let originalPdfBytes = null;
             const isVisible = el.style.display !== 'none';
             if (isVisible) {
                 el.style.display = 'none';
-                btn.classList.remove('text-blue-600');
-                btn.classList.add('text-gray-400', 'line-through');
-                btn.setAttribute('aria-expanded', 'false');
+                if (menuItem) menuItem.classList.remove('active');
             } else {
                 el.style.display = 'flex';
-                btn.classList.add('text-blue-600');
-                btn.classList.remove('text-gray-400', 'line-through');
-                btn.setAttribute('aria-expanded', 'true');
+                if (menuItem) menuItem.classList.add('active');
             }
 
-            // Special handling if we closed toolbar, resize content
-            if (panelName === 'toolbar') {
-                // Wait for animation or just trigger
-            }
+            // Save panel states
+            const states = StorageManager.loadPanelStates();
+            states[panelName] = !isVisible;
+            StorageManager.savePanelStates(states);
+
             // Trigger resize to update PDF scale/position if needed
             window.dispatchEvent(new Event('resize'));
         }
@@ -721,6 +949,9 @@ let originalPdfBytes = null;
                     // Force PNG format
                     const pngData = canvas.toDataURL('image/png');
                     fieldImages[currentImageFieldName] = pngData;
+
+                    // Save to localStorage
+                    StorageManager.saveImages(fieldImages);
 
                     console.log(`Image uploaded for ${currentImageFieldName} (converted to PNG)`);
                     updatePreview();
@@ -1105,8 +1336,10 @@ let originalPdfBytes = null;
             if (!validateJson()) return;
 
             const btn = document.getElementById(callerId || 'download-btn');
-            const originalText = btn.textContent;
-            btn.textContent = 'Generating...';
+            const originalHTML = btn.innerHTML;
+            const btnSpan = btn.querySelector('span');
+            if (btnSpan) btnSpan.textContent = 'Generating...';
+            else btn.textContent = 'Generating...';
             btn.disabled = true;
 
             try {
@@ -1295,7 +1528,7 @@ let originalPdfBytes = null;
                 alert('Error creating PDF. Check console for details.');
                 return null;
             } finally {
-                btn.textContent = originalText;
+                btn.innerHTML = originalHTML;
                 btn.disabled = false;
             }
         }
@@ -1334,15 +1567,27 @@ let originalPdfBytes = null;
         var copyBtn = document.querySelector('[data-action="copy-fields-csv"]');
         if (copyBtn) copyBtn.addEventListener('click', copyFieldCSV);
         
-        // Panel toggles
-        var sidebarToggle = document.getElementById('btn-toggle-sidebar');
-        if (sidebarToggle) sidebarToggle.addEventListener('click', function() { togglePanel('sidebar'); });
+        // View dropdown trigger
+        var viewDropdownTrigger = document.querySelector('#view-dropdown .dropdown-trigger');
+        if (viewDropdownTrigger) {
+            viewDropdownTrigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                toggleDropdown('view-dropdown');
+            });
+        }
         
-        var toolbarToggle = document.getElementById('btn-toggle-toolbar');
-        if (toolbarToggle) toolbarToggle.addEventListener('click', function() { togglePanel('toolbar'); });
+        // View dropdown menu items
+        var sidebarMenuItem = document.getElementById('menu-toggle-sidebar');
+        if (sidebarMenuItem) sidebarMenuItem.addEventListener('click', function(e) { e.stopPropagation(); togglePanelFromDropdown('sidebar'); });
         
-        var jsonToggle = document.getElementById('btn-toggle-json');
-        if (jsonToggle) jsonToggle.addEventListener('click', function() { togglePanel('json'); });
+        var toolbarMenuItem = document.getElementById('menu-toggle-toolbar');
+        if (toolbarMenuItem) toolbarMenuItem.addEventListener('click', function(e) { e.stopPropagation(); togglePanelFromDropdown('toolbar'); });
+        
+        var jsonMenuItem = document.getElementById('menu-toggle-json');
+        if (jsonMenuItem) jsonMenuItem.addEventListener('click', function(e) { e.stopPropagation(); togglePanelFromDropdown('json'); });
+        
+        var debugMenuItem = document.getElementById('menu-toggle-debug');
+        if (debugMenuItem) debugMenuItem.addEventListener('click', function(e) { e.stopPropagation(); toggleDebugFromDropdown(); });
         
         // AutoFit button
         var autofitBtn = document.getElementById('btn-autofit');

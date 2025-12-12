@@ -807,3 +807,242 @@ header {
 .dark header {
   background: rgba(29, 27, 32, 0.85) !important;
 }
+
+/* ========================================
+   Save Toast Notification
+   ======================================== */
+
+.save-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 10px 18px;
+  background: linear-gradient(135deg, var(--md-sys-color-tertiary-container), var(--md-sys-color-tertiary));
+  color: var(--md-sys-color-on-tertiary);
+  border-radius: var(--md-sys-shape-corner-medium);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: var(--md-sys-elevation-level4);
+  opacity: 0;
+  transform: translateY(10px) scale(0.95);
+  transition: all var(--md-sys-motion-duration-medium2) var(--md-sys-motion-easing-emphasized);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+.save-toast.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.dark .save-toast {
+  background: linear-gradient(135deg, var(--md-sys-color-tertiary-container), var(--md-sys-color-tertiary));
+}
+
+/* ========================================
+   Dropdown Menus (Glassmorphism)
+   ======================================== */
+
+.dropdown-container {
+  position: relative;
+  display: inline-flex;
+}
+
+.dropdown-trigger {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--md-sys-shape-corner-small);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.dropdown-trigger:hover {
+  background: rgba(92, 107, 192, 0.08);
+  color: var(--md-sys-color-primary);
+}
+
+.dropdown-trigger.active,
+.dropdown-trigger:focus {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.dropdown-trigger .chevron {
+  font-size: 10px;
+  transition: transform var(--transition-fast);
+}
+
+.dropdown-container.open .dropdown-trigger .chevron {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 160px;
+  padding: 6px;
+  background: rgba(254, 247, 255, 0.92);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-medium);
+  box-shadow: var(--md-sys-elevation-level4);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px) scale(0.96);
+  transition: all var(--md-sys-motion-duration-short4) var(--md-sys-motion-easing-emphasized);
+  z-index: 100;
+}
+
+.dropdown-container.open .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.dark .dropdown-menu {
+  background: rgba(33, 31, 38, 0.95);
+  border-color: var(--md-sys-color-outline-variant);
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--md-sys-color-on-surface);
+  background: transparent;
+  border: none;
+  border-radius: var(--md-sys-shape-corner-small);
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: all var(--transition-fast);
+}
+
+.dropdown-item:hover {
+  background: rgba(92, 107, 192, 0.12);
+}
+
+.dropdown-item.active {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.dropdown-item .icon {
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.dropdown-item .check {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--md-sys-color-primary);
+  opacity: 0;
+}
+
+.dropdown-item.active .check {
+  opacity: 1;
+}
+
+.dropdown-divider {
+  height: 1px;
+  margin: 6px 0;
+  background: var(--md-sys-color-outline-variant);
+}
+
+/* ========================================
+   Tooltips
+   ======================================== */
+
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%) scale(0.95);
+  padding: 6px 10px;
+  background: var(--md-sys-color-inverse-surface);
+  color: var(--md-sys-color-inverse-on-surface);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  border-radius: var(--md-sys-shape-corner-extra-small);
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--md-sys-motion-duration-short3) var(--md-sys-motion-easing-standard);
+  pointer-events: none;
+  z-index: 1000;
+}
+
+[data-tooltip]:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) scale(1);
+}
+
+/* ========================================
+   Improved Field Hover States
+   ======================================== */
+
+.field-overlay.editable:hover {
+  background: rgba(92, 107, 192, 0.06);
+  box-shadow: inset 0 0 0 1px rgba(92, 107, 192, 0.25);
+}
+
+/* ========================================
+   Compact Header Toolbar
+   ======================================== */
+
+.toolbar-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--md-sys-color-outline-variant);
+  margin: 0 4px;
+}
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--md-sys-shape-corner-small);
+  border: none;
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-icon:hover {
+  background: rgba(92, 107, 192, 0.08);
+  color: var(--md-sys-color-primary);
+}
+
+.btn-icon.active {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+
+.dark .btn-icon:hover {
+  background: rgba(207, 188, 255, 0.12);
+}
