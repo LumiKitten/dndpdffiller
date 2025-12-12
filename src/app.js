@@ -118,56 +118,175 @@ let originalPdfBytes = null;
 
         // Friendly display names for cryptic field names
         const FIELD_DISPLAY_NAMES = {
+            // Basic Info
+            "CharacterName": "Character Name",
+            "CharacterName 2": "Character Name (Page 2)",
+            "ClassLevel": "Class & Level (e.g. 'Wizard 5')",
+            "Background": "Background",
+            "PlayerName": "Player Name",
+            "Race ": "Race (trailing space required)",
+            "Alignment": "Alignment",
+            "XP": "Experience Points",
+
+            // Ability Scores
+            "STR": "Strength Score",
+            "DEX": "Dexterity Score",
+            "CON": "Constitution Score",
+            "INT": "Intelligence Score",
+            "WIS": "Wisdom Score",
+            "CHA": "Charisma Score",
+            "STRmod": "STR Modifier",
+            "DEXmod ": "DEX Modifier (trailing space)",
+            "CONmod": "CON Modifier",
+            "INTmod": "INT Modifier",
+            "WISmod": "WIS Modifier",
+            "CHamod": "CHA Modifier",
+
+            // Combat Stats
+            "AC": "Armor Class",
+            "Initiative": "Initiative Modifier",
+            "Speed": "Movement Speed",
+            "HPMax": "Maximum HP",
+            "HPCurrent": "Current HP",
+            "HPTemp": "Temporary HP",
+            "HD": "Hit Dice Remaining",
+            "HDTotal": "Hit Dice Total",
+            "ProfBonus": "Proficiency Bonus",
+            "Passive": "Passive Perception",
+            "Inspiration": "Inspiration (true/false)",
+
             // Saving Throw Proficiencies
-            "Check Box 11": "☐ STR Save Prof",
-            "Check Box 12": "☐ DEX Save Prof",
-            "Check Box 13": "☐ CON Save Prof",
-            "Check Box 14": "☐ INT Save Prof",
-            "Check Box 15": "☐ WIS Save Prof",
-            "Check Box 16": "☐ CHA Save Prof",
+            "ST Strength": "STR Saving Throw Modifier",
+            "ST Dexterity": "DEX Saving Throw Modifier",
+            "ST Constitution": "CON Saving Throw Modifier",
+            "ST Intelligence": "INT Saving Throw Modifier",
+            "ST Wisdom": "WIS Saving Throw Modifier",
+            "ST Charisma": "CHA Saving Throw Modifier",
+            "Check Box 11": "☐ STR Save Proficiency",
+            "Check Box 12": "☐ DEX Save Proficiency",
+            "Check Box 13": "☐ CON Save Proficiency",
+            "Check Box 14": "☐ INT Save Proficiency",
+            "Check Box 15": "☐ WIS Save Proficiency",
+            "Check Box 16": "☐ CHA Save Proficiency",
 
             // Death Saves
-            "Check Box 17": "☐ Death Save ✓1",
-            "Check Box 18": "☐ Death Save ✓2",
-            "Check Box 19": "☐ Death Save ✓3",
-            "Check Box 20": "☐ Death Save ✗1",
-            "Check Box 21": "☐ Death Save ✗2",
-            "Check Box 22": "☐ Death Save ✗3",
+            "Check Box 17": "☐ Death Save Success 1",
+            "Check Box 18": "☐ Death Save Success 2",
+            "Check Box 19": "☐ Death Save Success 3",
+            "Check Box 20": "☐ Death Save Failure 1",
+            "Check Box 21": "☐ Death Save Failure 2",
+            "Check Box 22": "☐ Death Save Failure 3",
+
+            // Skills
+            "Acrobatics": "Acrobatics Modifier",
+            "Animal": "Animal Handling Modifier",
+            "Arcana": "Arcana Modifier",
+            "Athletics": "Athletics Modifier",
+            "Deception ": "Deception Modifier (trailing space)",
+            "History ": "History Modifier (trailing space)",
+            "Insight": "Insight Modifier",
+            "Intimidation": "Intimidation Modifier",
+            "Investigation ": "Investigation Modifier (trailing space)",
+            "Medicine": "Medicine Modifier",
+            "Nature": "Nature Modifier",
+            "Perception ": "Perception Modifier (trailing space)",
+            "Performance": "Performance Modifier",
+            "Persuasion": "Persuasion Modifier",
+            "Religion": "Religion Modifier",
+            "SleightofHand": "Sleight of Hand Modifier",
+            "Stealth ": "Stealth Modifier (trailing space)",
+            "Survival": "Survival Modifier",
 
             // Skill Proficiencies
-            "Check Box 23": "☐ Acrobatics Prof",
-            "Check Box 24": "☐ Animal Handling Prof",
-            "Check Box 25": "☐ Arcana Prof",
-            "Check Box 26": "☐ Athletics Prof",
-            "Check Box 27": "☐ Deception Prof",
-            "Check Box 28": "☐ History Prof",
-            "Check Box 29": "☐ Insight Prof",
-            "Check Box 30": "☐ Intimidation Prof",
-            "Check Box 31": "☐ Investigation Prof",
-            "Check Box 32": "☐ Medicine Prof",
-            "Check Box 33": "☐ Nature Prof",
-            "Check Box 34": "☐ Perception Prof",
-            "Check Box 35": "☐ Performance Prof",
-            "Check Box 36": "☐ Persuasion Prof",
-            "Check Box 37": "☐ Religion Prof",
-            "Check Box 38": "☐ Sleight of Hand Prof",
-            "Check Box 39": "☐ Stealth Prof",
-            "Check Box 40": "☐ Survival Prof",
+            "Check Box 23": "☐ Acrobatics Proficiency",
+            "Check Box 24": "☐ Animal Handling Proficiency",
+            "Check Box 25": "☐ Arcana Proficiency",
+            "Check Box 26": "☐ Athletics Proficiency",
+            "Check Box 27": "☐ Deception Proficiency",
+            "Check Box 28": "☐ History Proficiency",
+            "Check Box 29": "☐ Insight Proficiency",
+            "Check Box 30": "☐ Intimidation Proficiency",
+            "Check Box 31": "☐ Investigation Proficiency",
+            "Check Box 32": "☐ Medicine Proficiency",
+            "Check Box 33": "☐ Nature Proficiency",
+            "Check Box 34": "☐ Perception Proficiency",
+            "Check Box 35": "☐ Performance Proficiency",
+            "Check Box 36": "☐ Persuasion Proficiency",
+            "Check Box 37": "☐ Religion Proficiency",
+            "Check Box 38": "☐ Sleight of Hand Proficiency",
+            "Check Box 39": "☐ Stealth Proficiency",
+            "Check Box 40": "☐ Survival Proficiency",
+
+            // Weapons
+            "Wpn Name": "Weapon 1 Name",
+            "Wpn1 AtkBonus": "Weapon 1 Attack Bonus",
+            "Wpn1 Damage": "Weapon 1 Damage",
+            "Wpn Name 2": "Weapon 2 Name",
+            "Wpn2 AtkBonus ": "Weapon 2 Attack Bonus",
+            "Wpn2 Damage ": "Weapon 2 Damage",
+            "Wpn Name 3": "Weapon 3 Name",
+            "Wpn3 AtkBonus  ": "Weapon 3 Attack Bonus",
+            "Wpn3 Damage ": "Weapon 3 Damage",
+            "AttacksSpellcasting": "Additional Attacks/Spells",
+
+            // Currency
+            "CP": "Copper Pieces",
+            "SP": "Silver Pieces",
+            "EP": "Electrum Pieces",
+            "GP": "Gold Pieces",
+            "PP": "Platinum Pieces",
+
+            // Text Blocks
+            "PersonalityTraits ": "Personality Traits (trailing space)",
+            "Ideals": "Ideals",
+            "Bonds": "Bonds",
+            "Flaws": "Flaws",
+            "Features and Traits": "Features & Traits",
+            "Feat+Traits": "Additional Features",
+            "ProficienciesLang": "Proficiencies & Languages",
+            "Equipment": "Equipment",
+
+            // Appearance (Page 2)
+            "Age": "Age",
+            "Height": "Height",
+            "Weight": "Weight",
+            "Eyes": "Eye Color",
+            "Skin": "Skin Color",
+            "Hair": "Hair Color",
+            "Backstory": "Character Backstory",
+            "Allies": "Allies & Organizations",
+            "FactionName": "Faction Name",
+            "Treasure": "Treasure",
 
             // Image fields
-            "CHARACTER IMAGE": "🖼️ Character Portrait",
-            "Faction Symbol Image": "🖼️ Faction Symbol",
+            "CHARACTER IMAGE": "🖼️ Character Portrait (Image)",
+            "Faction Symbol Image": "🖼️ Faction Symbol (Image)",
 
-            // Other fields with trailing spaces or odd names
-            "Race ": "Race",
-            "DEXmod ": "DEX Modifier",
-            "Deception ": "Deception",
-            "History ": "History",
-            "Investigation ": "Investigation",
-            "Perception ": "Perception",
-            "Stealth ": "Stealth",
-            "PersonalityTraits ": "Personality Traits",
-            "CHamod": "CHA Modifier"
+            // Spellcasting Header (Page 3)
+            "Spellcasting Class 2": "Spellcasting Class",
+            "SpellcastingAbility 2": "Spellcasting Ability",
+            "SpellSaveDC  2": "Spell Save DC",
+            "SpellAtkBonus 2": "Spell Attack Bonus",
+
+            // Spell Slots
+            "SlotsTotal 19": "Level 1 Spell Slots Total",
+            "SlotsRemaining 19": "Level 1 Spell Slots Remaining",
+            "SlotsTotal 20": "Level 2 Spell Slots Total",
+            "SlotsRemaining 20": "Level 2 Spell Slots Remaining",
+            "SlotsTotal 21": "Level 3 Spell Slots Total",
+            "SlotsRemaining 21": "Level 3 Spell Slots Remaining",
+            "SlotsTotal 22": "Level 4 Spell Slots Total",
+            "SlotsRemaining 22": "Level 4 Spell Slots Remaining",
+            "SlotsTotal 23": "Level 5 Spell Slots Total",
+            "SlotsRemaining 23": "Level 5 Spell Slots Remaining",
+            "SlotsTotal 24": "Level 6 Spell Slots Total",
+            "SlotsRemaining 24": "Level 6 Spell Slots Remaining",
+            "SlotsTotal 25": "Level 7 Spell Slots Total",
+            "SlotsRemaining 25": "Level 7 Spell Slots Remaining",
+            "SlotsTotal 26": "Level 8 Spell Slots Total",
+            "SlotsRemaining 26": "Level 8 Spell Slots Remaining",
+            "SlotsTotal 27": "Level 9 Spell Slots Total",
+            "SlotsRemaining 27": "Level 9 Spell Slots Remaining"
         };
 
         // Image field detection
@@ -1286,7 +1405,52 @@ let originalPdfBytes = null;
             updateOverlays();
         }
 
-
+        // Generate dynamic descriptions for spell fields
+        function getFieldDescription(key) {
+            // Check static mapping first
+            if (FIELD_DISPLAY_NAMES[key]) return FIELD_DISPLAY_NAMES[key];
+            
+            // Spell name fields: "Spells 10XX" pattern
+            const spellMatch = key.match(/^Spells (\d+)$/);
+            if (spellMatch) {
+                const num = parseInt(spellMatch[1]);
+                // Cantrips: 1014-1021 (8 slots)
+                if (num >= 1014 && num <= 1021) return `Cantrip ${num - 1013}`;
+                // Level 1: 1022-1033 (12 slots)
+                if (num >= 1022 && num <= 1033) return `Level 1 Spell ${num - 1021}`;
+                // Level 2: 1034-1046 (13 slots)
+                if (num >= 1034 && num <= 1046) return `Level 2 Spell ${num - 1033}`;
+                // Level 3: 1047-1059 (13 slots)
+                if (num >= 1047 && num <= 1059) return `Level 3 Spell ${num - 1046}`;
+                // Level 4: 1060-1072 (13 slots)
+                if (num >= 1060 && num <= 1072) return `Level 4 Spell ${num - 1059}`;
+                // Level 5: 1073-1081 (9 slots)
+                if (num >= 1073 && num <= 1081) return `Level 5 Spell ${num - 1072}`;
+                // Level 6: 1082-1090 (9 slots)
+                if (num >= 1082 && num <= 1090) return `Level 6 Spell ${num - 1081}`;
+                // Level 7: 1091-1099 (9 slots)
+                if (num >= 1091 && num <= 1099) return `Level 7 Spell ${num - 1090}`;
+                // Level 8-9: 10100+ pattern
+                if (num >= 10100 && num <= 10106) return `Level 8 Spell ${num - 10099}`;
+                if (num >= 10107 && num <= 10113) return `Level 9 Spell ${num - 10106}`;
+                return `Spell Field`;
+            }
+            
+            // Spell prep checkboxes: "Check Box 30XX" or "Check Box 3XX"
+            const checkMatch = key.match(/^Check Box (\d+)$/);
+            if (checkMatch) {
+                const num = parseInt(checkMatch[1]);
+                // 309-327: Level 1-2 spell prep
+                if (num >= 309 && num <= 327) return `☐ Spell Prepared (Lvl 1-2, #${num - 308})`;
+                // 251: appears to be a misc checkbox
+                if (num === 251) return `☐ Misc Checkbox`;
+                // 3010-3083: Level 3-9 spell prep
+                if (num >= 3010 && num <= 3083) return `☐ Spell Prepared (Lvl 3+, #${num - 3009})`;
+                return `☐ Checkbox`;
+            }
+            
+            return key; // Fallback to key itself
+        }
 
 
         function copyFieldCSV() {
@@ -1295,7 +1459,7 @@ let originalPdfBytes = null;
 
             sortedFields.forEach(key => {
                 const meta = fieldMetadata[key];
-                const desc = FIELD_DISPLAY_NAMES[key] || key;
+                const desc = getFieldDescription(key);
                 
                 // Determine field type
                 let fieldType = "Text";
