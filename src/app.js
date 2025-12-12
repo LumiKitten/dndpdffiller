@@ -635,6 +635,15 @@ let originalPdfBytes = null;
 
         // Silently try to load default PDF on page load
         async function autoLoadDefaultPDF() {
+            // Wait a bit to ensure libraries are loaded (helps on slower connections)
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Check if PDF-lib is available
+            if (typeof PDFLib === 'undefined') {
+                console.log('PDF-lib not ready, skipping auto-load');
+                return;
+            }
+            
             try {
                 const response = await fetch('5E_CharacterSheet_Fillable.pdf');
                 if (!response.ok) return; // Silently fail
@@ -1281,14 +1290,25 @@ let originalPdfBytes = null;
 
 
         function copyFieldCSV() {
-            const lines = ["Field ID,Description"];
+            const lines = ["Field ID,Type,Description"];
             const sortedFields = Object.keys(fieldMetadata).sort();
 
             sortedFields.forEach(key => {
+                const meta = fieldMetadata[key];
                 const desc = FIELD_DISPLAY_NAMES[key] || key;
-                // Escape quotes if needed
+                
+                // Determine field type
+                let fieldType = "Text";
+                if (meta && meta.isCheckbox) {
+                    fieldType = "Checkbox";
+                } else if (IMAGE_FIELDS.includes(key)) {
+                    fieldType = "Image";
+                }
+                
+                // Escape quotes and commas
+                const safeKey = key.includes(',') ? `"${key}"` : key;
                 const safeDesc = desc.includes(',') ? `"${desc}"` : desc;
-                lines.push(`${key},${safeDesc}`);
+                lines.push(`${safeKey},${fieldType},${safeDesc}`);
             });
 
             const csvContent = lines.join('\n');
