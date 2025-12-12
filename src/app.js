@@ -495,6 +495,9 @@ let originalPdfBytes = null;
 
             // Keyboard shortcuts
             document.addEventListener('keydown', handleKeyboardShortcuts);
+
+            // Try to auto-load default PDF (silently fails if not found)
+            autoLoadDefaultPDF();
         });
 
         function handleKeyboardShortcuts(e) {
@@ -627,6 +630,23 @@ let originalPdfBytes = null;
                 btn.textContent = 'Load Sample D&D Sheet';
             } finally {
                 btn.disabled = false;
+            }
+        }
+
+        // Silently try to load default PDF on page load
+        async function autoLoadDefaultPDF() {
+            try {
+                const response = await fetch('5E_CharacterSheet_Fillable.pdf');
+                if (!response.ok) return; // Silently fail
+                const arrayBuffer = await response.arrayBuffer();
+                originalPdfBytes = new Uint8Array(arrayBuffer);
+                document.getElementById('file-name-display').textContent = '5E_CharacterSheet_Fillable.pdf';
+                document.getElementById('file-name-display').classList.remove('hidden');
+                document.getElementById('load-sample-btn').textContent = 'Reload Sample';
+                await processPdfBytes();
+            } catch (err) {
+                // Silently fail - user can manually load PDF
+                console.log('Default PDF not available, user can load manually');
             }
         }
 
